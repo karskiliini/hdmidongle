@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wireless Display Dongle — Projektiyhteenveto</title>
+<style>
+  :root {
+    --bg: #fafafa;
+    --fg: #1a1a1a;
+    --accent: #2563eb;
+    --accent-light: #dbeafe;
+    --border: #e5e7eb;
+    --card-bg: #ffffff;
+    --code-bg: #f3f4f6;
+    --green: #16a34a;
+    --green-bg: #dcfce7;
+    --orange: #ea580c;
+    --orange-bg: #fff7ed;
+    --red: #dc2626;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.6;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+  }
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    color: #6b7280;
+    font-size: 1.1rem;
+    margin-bottom: 2.5rem;
+  }
+
+  h2 {
+    font-size: 1.35rem;
+    font-weight: 600;
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 2px solid var(--accent);
+  }
+
+  h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  p { margin-bottom: 0.75rem; }
+
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+
+  .card-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .card-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+    margin-bottom: 0.25rem;
+  }
+
+  .card-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .badge-blue { background: var(--accent-light); color: var(--accent); }
+  .badge-green { background: var(--green-bg); color: var(--green); }
+  .badge-orange { background: var(--orange-bg); color: var(--orange); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+  }
+
+  th {
+    text-align: left;
+    padding: 0.6rem 0.75rem;
+    background: var(--code-bg);
+    font-weight: 600;
+    border-bottom: 2px solid var(--border);
+  }
+
+  td {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  .diagram {
+    background: var(--fg);
+    color: #e5e7eb;
+    padding: 1.25rem 1.5rem;
+    border-radius: 10px;
+    font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    overflow-x: auto;
+    margin-bottom: 1rem;
+    white-space: pre;
+  }
+
+  code {
+    background: var(--code-bg);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-family: "SF Mono", "Fira Code", monospace;
+  }
+
+  .flow-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .flow-num {
+    min-width: 2rem;
+    height: 2rem;
+    background: var(--accent);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+
+  .flow-text { padding-top: 0.25rem; }
+
+  .price-total {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .separator {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 2rem 0;
+  }
+
+  .footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    color: #9ca3af;
+    font-size: 0.8rem;
+    text-align: center;
+  }
+
+  @media print {
+    body { max-width: 100%; padding: 1rem; }
+    .card { break-inside: avoid; }
+    h2 { break-after: avoid; }
+  }
+
+  @media (max-width: 640px) {
+    .card-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Wireless Display <span>Dongle</span></h1>
+<p class="subtitle">Raspberry Pi -pohjainen langaton näyttödongle &mdash; AirPlay + NDI</p>
+
+<!-- Konsepti -->
+<h2>Konsepti</h2>
+<p>Yksi dongle, kaksi protokollaa. Automaattinen vaihto NDI:n (4K) ja AirPlayn (1080p) välillä.</p>
+
+<div class="diagram">MacBook  ──AirPlay 1080p──→ Wi-Fi ──→ Dongle ──HDMI──→ Näyttö
+Mac Mini ──NDI 4K────────→ Wi-Fi ──→ Dongle ──HDMI──→ 4K Näyttö
+
+                  (valinnainen HDMI→DVI -adapteri DVI-näytöille)</div>
+
+<div class="card-row">
+  <div class="card">
+    <div class="card-label">Lite-profiili</div>
+    <div class="card-value">1080p</div>
+    <p style="margin-top:0.5rem">
+      <span class="badge badge-blue">AirPlay</span>
+      <span class="badge badge-green">Pi Zero 2 W</span>
+    </p>
+    <p style="font-size:0.9rem;color:#6b7280;margin-top:0.5rem">MacBook &rarr; natiivi AirPlay-peilaus. Ei lisäohjelmistoja Maciin.</p>
+  </div>
+  <div class="card">
+    <div class="card-label">4K-profiili</div>
+    <div class="card-value">3840&times;2160</div>
+    <p style="margin-top:0.5rem">
+      <span class="badge badge-orange">NDI</span>
+      <span class="badge badge-green">Pi 4</span>
+    </p>
+    <p style="font-size:0.9rem;color:#6b7280;margin-top:0.5rem">Mac Mini &rarr; NDI Screen Capture. <code>brew install --cask ndi-tools</code></p>
+  </div>
+</div>
+
+<!-- Toimintalogiikka -->
+<h2>Toimintalogiikka</h2>
+
+<div class="diagram">         ┌───────────────────────────────────────────┐
+         ▼                                           │
+       IDLE                                          │
+     (etsi NDI:tä)                                   │
+         │                                           │
+    NDI löytyy? ──Kyllä──→ NDI 4K ──────katkeaa────→─┘
+         │                                           │
+        Ei                                           │
+         │                                           │
+    AirPlay kuuntelee ──NDI löytyy──→ NDI 4K         │
+         │                                           │
+    asiakas yhdistää                                  │
+         │                                           │
+    AirPlay aktiivinen ──────────katkeaa────────────→─┘
+    (ei etsi NDI:tä)</div>
+
+<div class="card">
+  <ul style="list-style:none;padding:0">
+    <li style="margin-bottom:0.4rem"><strong>IDLE:</strong> Etsi NDI-lähdettä ensin (4K priorisoitu)</li>
+    <li style="margin-bottom:0.4rem"><strong>Ei NDI:tä:</strong> AirPlay kuuntelee, mutta etsii NDI:tä samalla</li>
+    <li style="margin-bottom:0.4rem"><strong>AirPlay aktiivinen:</strong> Ei etsi NDI:tä &mdash; ei häiritä yhteyttä</li>
+    <li><strong>Yhteys katkeaa:</strong> Palaa IDLE &rarr; etsi NDI ensin</li>
+  </ul>
+</div>
+
+<!-- Laitteisto -->
+<h2>Komponenttilista</h2>
+
+<h3>Lite-profiili <span class="badge badge-blue">~48 &euro;</span></h3>
+<table>
+  <tr><th>Komponentti</th><th>Tuote</th><th>Hinta</th></tr>
+  <tr><td>Raspberry Pi Zero 2 W</td><td>Headerless</td><td>~18 &euro;</td></tr>
+  <tr><td>microSD-kortti</td><td>SanDisk Ultra 32 GB A1</td><td>~10 &euro;</td></tr>
+  <tr><td>Mini-HDMI &rarr; HDMI</td><td>UGREEN flat / CY 90&deg;</td><td>~8 &euro;</td></tr>
+  <tr><td>Micro-USB-virtakaapeli</td><td>30 cm, kulmaliitin</td><td>~6 &euro;</td></tr>
+  <tr><td>Jäähdytyslevy</td><td>Kupari 14&times;14&times;3 mm</td><td>~3 &euro;</td></tr>
+  <tr><td>3D-tulostettu kotelo</td><td>PLA / PETG</td><td>~3 &euro;</td></tr>
+</table>
+
+<h3>4K-profiili <span class="badge badge-orange">~84 &euro;</span></h3>
+<table>
+  <tr><th>Komponentti</th><th>Tuote</th><th>Hinta</th></tr>
+  <tr><td>Raspberry Pi 4 (2 GB)</td><td>Model B</td><td>~45 &euro;</td></tr>
+  <tr><td>microSD-kortti</td><td>SanDisk Ultra 32 GB A1</td><td>~10 &euro;</td></tr>
+  <tr><td>Micro-HDMI &rarr; HDMI</td><td>UGREEN flat / CY 90&deg;</td><td>~8 &euro;</td></tr>
+  <tr><td>USB-C-virtakaapeli</td><td>30 cm, 5V/3A</td><td>~8 &euro;</td></tr>
+  <tr><td>Jäähdytys</td><td>Alumiinikotelo + tuuletin</td><td>~8 &euro;</td></tr>
+  <tr><td>3D-tulostettu kotelo</td><td>PETG</td><td>~5 &euro;</td></tr>
+</table>
+
+<h3>Valinnainen</h3>
+<table>
+  <tr><th>Komponentti</th><th>Hinta</th><th>Huomiot</th></tr>
+  <tr><td>HDMI &rarr; DVI -adapteri</td><td>~8 &euro;</td><td>DVI-näytöille, ääni ei kulje</td></tr>
+  <tr><td>USB-virtalähde (seinä)</td><td>~12 &euro;</td><td>Jos monitorin USB ei riitä</td></tr>
+</table>
+
+<div class="card" style="margin-top:1.5rem;text-align:center">
+  <div class="card-label">Kokonaiskustannus (1&times; Lite + 2&times; 4K)</div>
+  <div class="price-total">~216 &euro;</div>
+  <p style="color:#6b7280;font-size:0.9rem;margin-top:0.25rem">3 donglea yhteensä</p>
+</div>
+
+<!-- Yhteensopivuus -->
+<h2>Yhteensopivuus</h2>
+
+<table>
+  <tr><th>Lähde</th><th>AirPlay 1080p</th><th>NDI 4K</th><th>Huomiot</th></tr>
+  <tr><td>MacBook (2015 Pro 15")</td><td style="color:var(--green)">&#10003;</td><td style="color:var(--red)">&#10007;</td><td>Natiivi AirPlay, ei HW H.265 -enkoodausta</td></tr>
+  <tr><td>MacBook (Apple Silicon)</td><td style="color:var(--green)">&#10003;</td><td style="color:var(--green)">&#10003;</td><td>Molemmat toimivat</td></tr>
+  <tr><td>Mac Mini (Apple Silicon)</td><td style="color:var(--green)">&#10003;</td><td style="color:var(--green)">&#10003;</td><td>4K NDI VideoToolbox HW-enkoodauksella</td></tr>
+</table>
+
+<div class="card" style="margin-top:1rem">
+  <strong>AirPlay-rajoitus:</strong> Näytön peilaus on aina max 1080p, myös Apple TV 4K:lla. Tämä on protokollan rajoitus. 4K vaatii NDI:n.
+</div>
+
+<!-- Asennus -->
+<h2>Asennus</h2>
+
+<h3>Dongle (Pi)</h3>
+<div class="flow-step">
+  <div class="flow-num">1</div>
+  <div class="flow-text">Flashaa <strong>Raspberry Pi OS Lite (Bookworm)</strong> SD-kortille Raspberry Pi Imagerilla. Aseta Wi-Fi ja SSH.</div>
+</div>
+<div class="flow-step">
+  <div class="flow-num">2</div>
+  <div class="flow-text">SSH sisään ja suorita:<br><code>sudo ./setup/install.sh "Olohuone"</code></div>
+</div>
+<div class="flow-step">
+  <div class="flow-num">3</div>
+  <div class="flow-text"><code>sudo reboot</code> &mdash; dongle on valmis käyttöön.</div>
+</div>
+
+<p>Skripti tunnistaa automaattisesti Pi-mallin ja säätää asetukset (GPU-muisti, ylikellotus, swap, jäähdytys).</p>
+
+<h3>Mac Mini (4K NDI -lähde)</h3>
+<div class="flow-step">
+  <div class="flow-num">1</div>
+  <div class="flow-text"><code>brew install --cask ndi-tools</code></div>
+</div>
+<div class="flow-step">
+  <div class="flow-num">2</div>
+  <div class="flow-text">Käynnistä <strong>NDI Screen Capture</strong> &rarr; valitse näyttö &rarr; 4K</div>
+</div>
+
+<h3>MacBook (AirPlay)</h3>
+<div class="flow-step">
+  <div class="flow-num">1</div>
+  <div class="flow-text">Ohjauskeskus &rarr; Näytön peilaus &rarr; valitse donglen nimi</div>
+</div>
+
+<!-- 3D-kotelo -->
+<h2>3D-kotelo</h2>
+
+<div class="card-row">
+  <div class="card">
+    <div class="card-label">Lite (Pi Zero 2 W)</div>
+    <p><strong>~68 &times; 33 &times; 15 mm</strong></p>
+    <p style="font-size:0.9rem;color:#6b7280">PLA tai PETG, snap-fit, tuuletusaukot</p>
+    <p style="font-size:0.85rem;margin-top:0.5rem"><code>case/lite-case.scad</code></p>
+  </div>
+  <div class="card">
+    <div class="card-label">4K (Pi 4)</div>
+    <p><strong>~89 &times; 60 &times; 22 mm</strong></p>
+    <p style="font-size:0.9rem;color:#6b7280">PETG (lämmönkesto), 25mm tuuletinaukko</p>
+    <p style="font-size:0.85rem;margin-top:0.5rem"><code>case/4k-case.scad</code></p>
+  </div>
+</div>
+
+<p>Avaa <strong>OpenSCAD</strong>:lla. Säädä <code>tol</code>-muuttuja (toleranssi) tulostimesi mukaan. Kaksiosainen kotelo: pohja + kansi.</p>
+
+<!-- Vaihtoehtojen vertailu -->
+<h2>DIY vs. kaupallinen</h2>
+
+<table>
+  <tr><th>Vaihtoehto</th><th>Hinta</th><th>4K</th><th>2&times; näyttö</th><th>Luotettavuus</th></tr>
+  <tr><td>AliExpress no-name</td><td>1&ndash;6 &euro;</td><td style="color:var(--red)">&#10007;</td><td style="color:var(--red)">&#10007;</td><td>Heikko</td></tr>
+  <tr><td>Yinker WX3</td><td>~30 &euro;</td><td style="color:var(--red)">&#10007;*</td><td style="color:var(--red)">&#10007;</td><td>OK</td></tr>
+  <tr><td style="font-weight:600">DIY Dongle (t&auml;m&auml;)</td><td style="font-weight:600">48&ndash;84 &euro;</td><td style="color:var(--green);font-weight:600">&#10003;</td><td style="color:var(--green);font-weight:600">&#10003;</td><td style="font-weight:600">Hyv&auml;</td></tr>
+  <tr><td>Apple TV 4K</td><td>~150 &euro;</td><td style="color:var(--red)">&#10007;**</td><td style="color:var(--red)">&#10007;</td><td>Erinomainen</td></tr>
+</table>
+<p style="font-size:0.8rem;color:#6b7280">* Ei 4K peilausta &nbsp; ** AirPlay-peilaus max 1080p, striimaus 4K</p>
+
+<!-- Projektirakenne -->
+<h2>Projektirakenne</h2>
+
+<div class="diagram">hdmidongle/
+├── README.md                  Yleiskuvaus
+├── BOM.md                     Komponenttilista
+├── setup/
+│   ├── install.sh             Yhdistetty asennusskripti
+│   └── dongle-switcher.sh     NDI/AirPlay-ohjainlogiikka
+└── case/
+    ├── lite-case.scad         Pi Zero 2 W -kotelo
+    └── 4k-case.scad           Pi 4 -kotelo</div>
+
+<div class="footer">
+  Wireless Display Dongle &mdash; avoimen l&auml;hdekoodin projekti<br>
+  Raspberry Pi + UxPlay + NDI
+</div>
+
+</body>
+</html>
