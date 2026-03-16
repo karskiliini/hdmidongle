@@ -68,8 +68,8 @@ Offset  Koko   Tyyppi      Kenttä
 | ID | Kone | Resoluutio | Paletti | FPS |
 |---|---|---|---|---|
 | 0x00 | Commodore 64 | 320×200 | 16 väriä | 50 (PAL) |
-| 0x01 | Amiga OCS/ECS | 320×256 | 32 väriä | 50 (PAL) |
-| 0x02 | Amiga AGA | 320–640 × 200–512 | 256 väriä | 50 (PAL) |
+| 0x01 | Amiga OCS/ECS | 320×256 | 32 väriä (12-bit RGBI) | 50 (PAL) |
+| 0x02 | Amiga AGA | 320–640 × 200–512 | 256 väriä (24-bit RGB, ADC) | 50 (PAL) |
 | 0x03 | NES | 256×240 | 64 väriä | 60 (NTSC) |
 | 0x04 | Atari ST | 320×200 | 16 väriä | 50/60 |
 | 0x05 | ZX Spectrum | 256×192 | 16 väriä | 50 (PAL) |

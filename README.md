@@ -6,22 +6,27 @@ Raspberry Pi -pohjaisia langattomia näyttödongleja ja lähettimiä.
 
 ```
 hdmidongle/
-├── receiver/           ← Vastaanotin-dongle (Pi Zero 2W / Pi 4)
-├── c64-transmitter/    ← C64 langaton lähetin (Pico + Pi Zero)
-├── app/                ← Mac-konfigurointisovellus (SwiftUI)
-├── case/               ← 3D-kotelomallit (OpenSCAD)
-└── docs/               ← Dokumentaatio ja pitch
+├── receiver/            ← Vastaanotin-dongle (Pi Zero 2W / Pi 4)
+├── c64-transmitter/     ← C64 langaton lähetin (bus snoop, Pico + Pi Zero)
+├── amiga-transmitter/   ← Amiga langaton lähetin (RGB capture, Pico + Pi Zero)
+├── protocol/            ← RETRO-protokollamäärittely (geneerinen)
+├── app/                 ← Mac-konfigurointisovellus (SwiftUI)
+├── case/                ← 3D-kotelomallit (OpenSCAD)
+└── docs/                ← Dokumentaatio ja pitch
 ```
 
 ## Järjestelmä
 
 ```
 C64 ──bus──→ Pico + Pi Zero ──Wi-Fi──┐
-MacBook ──AirPlay 1080p──Wi-Fi──┐    │
-Mac Mini ──NDI 4K──Wi-Fi──┐     ▼    ▼
+Amiga ──RGB──→ Pico + Pi Zero ──Wi-Fi──┐
+MacBook ──AirPlay 1080p──Wi-Fi──┐    │ │
+Mac Mini ──NDI 4K──Wi-Fi──┐     ▼    ▼ ▼
                            ▼    Pi Zero 2W ──HDMI──→ 1080p
                           Pi 4 ──HDMI 0──→ 4K Display 1
                                ──HDMI 1──→ 4K Display 2
+
+Kaikki retro-lähettimet käyttävät samaa RETRO-protokollaa (protocol/).
 ```
 
 Vastaanotin-dongle tukee kolmea protokollaa automaattisella priorisoinnilla:
@@ -34,6 +39,7 @@ NDI (4K) > C64 raw UDP > AirPlay (1080p)
 | Vastaanotin Lite (1080p) | Pi Zero 2 W | [~48 €](BOM.md) |
 | Vastaanotin 4K Dual | Pi 4 | [~92 €](BOM.md) |
 | C64-lähetin | Pico + Pi Zero 2W | [~35 €](c64-transmitter/BOM.md) |
+| Amiga-lähetin | Pico + Pi Zero 2W | [~31 €](amiga-transmitter/BOM.md) |
 
 ## Asennus
 

@@ -22,7 +22,8 @@
       "WebFetch(domain:www.digikey.fi)",
       "WebFetch(domain:www.partco.fi)",
       "WebFetch(domain:www.lcsc.com)",
-      "Bash(git mv:*)"
+      "Bash(git mv:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
