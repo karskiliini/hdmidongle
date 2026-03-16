@@ -178,18 +178,16 @@ iwconfig wlan0 power off 2>/dev/null || true
 WIFIEOF
 chmod +x /etc/NetworkManager/dispatcher.d/99-wifi-powersave-off
 
-# 9. Asenna switcher-palvelu
-echo "--- [9/9] Asennetaan palvelu ---"
+# 9. Asenna palvelut
+echo "--- [9/12] Asennetaan dongle-palvelu ---"
 
-# Kopioi switcher-skripti
 cp "$SCRIPT_DIR/dongle-switcher.sh" /usr/local/bin/dongle-switcher
 chmod +x /usr/local/bin/dongle-switcher
 
-# Systemd-palvelu
 cat > /etc/systemd/system/dongle.service << EOF
 [Unit]
 Description=Wireless Display Dongle - ${DONGLE_NAME}
-After=network-online.target avahi-daemon.service
+After=network-online.target avahi-daemon.service dongle-wifi-manager.service
 Wants=network-online.target avahi-daemon.service
 
 [Service]
@@ -208,11 +206,44 @@ SupplementaryGroups=video render audio
 WantedBy=multi-user.target
 EOF
 
+# 10. USB Gadget -tila (Mac-konfigurointi)
+echo "--- [10/12] USB Gadget -tila ---"
+bash "$SCRIPT_DIR/usb-gadget-setup.sh"
+
+# 11. Wi-Fi AP -tila (puhelin-konfigurointi)
+echo "--- [11/12] Wi-Fi AP -tila ---"
+bash "$SCRIPT_DIR/wifi-ap-setup.sh"
+
+# 12. HDMI setup-näyttö + web UI
+echo "--- [12/12] Setup-näyttö ja web UI ---"
+
+mkdir -p /usr/local/share/dongle
+cp "$SCRIPT_DIR/web-ui.html" /usr/local/share/dongle/web-ui.html
+cp "$SCRIPT_DIR/setup-screen.py" /usr/local/bin/dongle-setup-screen.py
+chmod +x /usr/local/bin/dongle-setup-screen.py
+
+# HDMI setup-näytön palvelu
+cat > /etc/systemd/system/dongle-setup-screen.service << 'EOF'
+[Unit]
+Description=Dongle HDMI Setup Screen
+After=dongle-wifi-manager.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /usr/local/bin/dongle-setup-screen.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
 systemctl daemon-reload
 systemctl enable avahi-daemon
 systemctl enable dongle.service
+systemctl enable dongle-setup-screen.service
 
-# Poista vanhat erilliset palvelut jos olemassa
+# Poista vanhat palvelut
 systemctl disable uxplay.service 2>/dev/null || true
 systemctl disable ndi-receiver.service 2>/dev/null || true
 
@@ -222,16 +253,14 @@ echo ""
 echo "Donglen nimi: $DONGLE_NAME"
 echo "Alusta:      $PI_MODEL"
 echo ""
-echo "Toiminta:"
-echo "  1. AirPlay (1080p) — oletustila, aina käytettävissä"
-echo "  2. NDI (4K)        — aktivoituu automaattisesti kun NDI-lähde löytyy"
-echo "  3. NDI priorisoidaan AirPlayn yli"
+echo "Konfigurointi (3 tapaa):"
+echo "  1. HDMI: Kytke näyttöön → ohjeet näkyvät ruudulla"
+echo "  2. Puhelin: Yhdistä 'Dongle-XXXX' Wi-Fi → selain → konfiguroi"
+echo "  3. Mac USB: Kytke USB → DongleConfig-appi aukeaa"
 echo ""
-echo "Mac Mini (NDI 4K):"
-echo "  brew install --cask ndi-tools"
-echo "  → Käynnistä NDI Screen Capture"
-echo ""
-echo "MacBook (AirPlay 1080p):"
-echo "  → Ohjauskeskus → Näytön peilaus → '$DONGLE_NAME'"
+echo "Kun konfiguroitu:"
+echo "  - AirPlay (1080p) — MacBook → Ohjauskeskus → Näytön peilaus"
+echo "  - NDI (4K) — Mac Mini → NDI Screen Capture"
+echo "  - Asetukset: http://<donglen-ip>:8080"
 echo ""
 echo "Käynnistä uudelleen: sudo reboot"
