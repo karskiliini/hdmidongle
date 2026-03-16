@@ -30,8 +30,12 @@ def load_config():
         "wifi_ssid": "",
         "wifi_password": "",
         "wifi_country": "FI",
-        "mode": "auto",  # auto | airplay | ndi
+        "mode": "auto",  # auto | airplay | ndi | retro
         "resolution": "auto",  # auto | 1080p | 720p
+        "render_mode": "pixel",  # pixel | smooth | crt
+        "crt_scanlines": True,
+        "crt_bloom": 0.3,  # 0.0–1.0
+        "crt_curvature": 0.0,  # 0.0–1.0 (0 = flat)
     }
     if os.path.exists(CONFIG_FILE):
         with open(CONFIG_FILE) as f:

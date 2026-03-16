@@ -49,6 +49,10 @@ struct ConfigView: View {
     @State private var wifiCountry = "FI"
     @State private var mode = "auto"
     @State private var resolution = "auto"
+    @State private var renderMode = "pixel"
+    @State private var crtScanlines = true
+    @State private var crtBloom = 0.3
+    @State private var crtCurvature = 0.0
 
     @State private var networks: [DongleAPI.WiFiNetwork] = []
     @State private var systemInfo: DongleAPI.SystemInfo?
@@ -57,7 +61,7 @@ struct ConfigView: View {
     @State private var statusMessage = ""
     @State private var showPassword = false
 
-    let modes = ["auto", "airplay", "ndi"]
+    let modes = ["auto", "airplay", "ndi", "retro"]
     let resolutions = ["auto", "1080p", "720p"]
     let countries = ["FI", "SE", "NO", "DK", "DE", "US", "GB"]
 
@@ -99,15 +103,43 @@ struct ConfigView: View {
                             .textFieldStyle(.roundedBorder)
 
                         Picker("Tila", selection: $mode) {
-                            Text("Automaattinen (NDI > AirPlay)").tag("auto")
+                            Text("Automaattinen (NDI > RETRO > AirPlay)").tag("auto")
                             Text("Vain AirPlay (1080p)").tag("airplay")
                             Text("Vain NDI (4K)").tag("ndi")
+                            Text("Vain RETRO (C64/Amiga/CPC)").tag("retro")
                         }
 
                         Picker("Resoluutio", selection: $resolution) {
                             Text("Automaattinen").tag("auto")
                             Text("1080p").tag("1080p")
                             Text("720p").tag("720p")
+                        }
+                    }
+
+                    // Renderointi
+                    Section("Renderointi (RETRO)") {
+                        Picker("Skaalaustila", selection: $renderMode) {
+                            Text("Pikselitarkka").tag("pixel")
+                            Text("Pehmentava (bilinear)").tag("smooth")
+                            Text("CRT-simulaatio").tag("crt")
+                        }
+
+                        if renderMode == "crt" {
+                            Toggle("Scanline-raidat", isOn: $crtScanlines)
+
+                            HStack {
+                                Text("Bloom")
+                                Slider(value: $crtBloom, in: 0...1)
+                                Text("\(Int(crtBloom * 100))%")
+                                    .frame(width: 35)
+                            }
+
+                            HStack {
+                                Text("Kaarevuus")
+                                Slider(value: $crtCurvature, in: 0...1)
+                                Text("\(Int(crtCurvature * 100))%")
+                                    .frame(width: 35)
+                            }
                         }
                     }
 
@@ -233,6 +265,10 @@ struct ConfigView: View {
                 "wifi_country": wifiCountry,
                 "mode": mode,
                 "resolution": resolution,
+                "render_mode": renderMode,
+                "crt_scanlines": crtScanlines ? "true" : "false",
+                "crt_bloom": String(format: "%.2f", crtBloom),
+                "crt_curvature": String(format: "%.2f", crtCurvature),
             ]
             let response = try await DongleAPI.shared.updateConfig(config)
             if response.success {

@@ -74,10 +74,32 @@ function renderUI(data) {
       <input id="name" type="text" value="${esc(c.dongle_name)}" placeholder="Donglen nimi">
       <label>Tila</label>
       <select id="mode">
-        <option value="auto" ${c.mode==='auto'?'selected':''}>Automaattinen (NDI > AirPlay)</option>
+        <option value="auto" ${c.mode==='auto'?'selected':''}>Automaattinen (NDI > RETRO > AirPlay)</option>
         <option value="airplay" ${c.mode==='airplay'?'selected':''}>Vain AirPlay (1080p)</option>
         <option value="ndi" ${c.mode==='ndi'?'selected':''}>Vain NDI (4K)</option>
+        <option value="retro" ${c.mode==='retro'?'selected':''}>Vain RETRO (C64/Amiga/CPC)</option>
       </select>
+    </div>
+
+    <div class="card">
+      <h2>Renderointi (RETRO)</h2>
+      <label>Skaalaustila</label>
+      <select id="render_mode">
+        <option value="pixel" ${c.render_mode==='pixel'?'selected':''}>Pikselitarkka (nearest neighbor)</option>
+        <option value="smooth" ${c.render_mode==='smooth'?'selected':''}>Pehmentava (bilinear)</option>
+        <option value="crt" ${c.render_mode==='crt'?'selected':''}>CRT-simulaatio</option>
+      </select>
+      <div id="crt-options" style="display:${c.render_mode==='crt'?'block':'none'}">
+        <label>Scanline-raidat</label>
+        <select id="crt_scanlines">
+          <option value="true" ${c.crt_scanlines?'selected':''}>Paalla</option>
+          <option value="false" ${!c.crt_scanlines?'selected':''}>Pois</option>
+        </select>
+        <label>Bloom / hehku (${(c.crt_bloom*100).toFixed(0)}%)</label>
+        <input id="crt_bloom" type="range" min="0" max="100" value="${(c.crt_bloom*100).toFixed(0)}" oninput="this.previousElementSibling.textContent='Bloom / hehku ('+this.value+'%)'">
+        <label>Kaarevuus (${(c.crt_curvature*100).toFixed(0)}%)</label>
+        <input id="crt_curvature" type="range" min="0" max="100" value="${(c.crt_curvature*100).toFixed(0)}" oninput="this.previousElementSibling.textContent='Kaarevuus ('+this.value+'%)'">
+      </div>
     </div>
 
     <div class="card">
@@ -109,6 +131,11 @@ function renderUI(data) {
   `;
 
   scanWifi(c.wifi_ssid);
+
+  // CRT-asetusten näyttö/piilotus
+  document.getElementById('render_mode').addEventListener('change', function() {
+    document.getElementById('crt-options').style.display = this.value === 'crt' ? 'block' : 'none';
+  });
 }
 
 async function scanWifi(currentSSID) {
@@ -147,6 +174,10 @@ async function saveConfig() {
     mode: document.getElementById('mode').value,
     wifi_ssid: document.getElementById('wifi-ssid').value,
     wifi_password: document.getElementById('wifi-pass').value,
+    render_mode: document.getElementById('render_mode').value,
+    crt_scanlines: document.getElementById('crt_scanlines').value === 'true',
+    crt_bloom: parseInt(document.getElementById('crt_bloom').value) / 100,
+    crt_curvature: parseInt(document.getElementById('crt_curvature').value) / 100,
   };
 
   try {

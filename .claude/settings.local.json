@@ -23,7 +23,11 @@
       "WebFetch(domain:www.partco.fi)",
       "WebFetch(domain:www.lcsc.com)",
       "Bash(git mv:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "WebFetch(domain:www.cpcwiki.eu)",
+      "WebFetch(domain:cpctech.cpcwiki.de)",
+      "WebFetch(domain:bread80.com)",
+      "WebFetch(domain:www.grimware.org)"
     ]
   }
 }
