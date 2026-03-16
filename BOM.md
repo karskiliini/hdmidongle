@@ -1,6 +1,6 @@
 # Komponenttilista (BOM)
 
-## Lite-profiili (AirPlay, 1080p)
+## Lite-dongle (AirPlay, 1080p) — Pi Zero 2 W
 
 | # | Komponentti | Tuote | Kpl | Hinta (€) | Huomiot |
 |---|-------------|-------|-----|-----------|---------|
@@ -14,23 +14,25 @@
 | | **Lite yhteensä: ~48 €** |
 |---|---|
 
-## 4K-profiili (NDI, 4K)
+## 4K Dual -dongle (NDI, 2× 4K) — Pi 4
+
+Yksi Pi 4 ajaa kaksi 4K-näyttöä (HDMI 0 + HDMI 1, kloonaus).
 
 | # | Komponentti | Tuote | Kpl | Hinta (€) | Huomiot |
 |---|-------------|-------|-----|-----------|---------|
-| 1 | Raspberry Pi 4 (2 GB) | Pi 4 Model B | 1 | ~45 | H.265 4K60 HW-dekoodaus (VideoCore VI) |
+| 1 | Raspberry Pi 4 (2 GB) | Pi 4 Model B | 1 | ~45 | H.265 4K60 HW-dekoodaus, 2× micro-HDMI |
 | 2 | microSD-kortti | SanDisk Ultra 32 GB Class 10 A1 | 1 | ~10 | 16 GB minimi |
-| 3 | Micro-HDMI → HDMI -adapteri | UGREEN flat / CY 90° kulma | 1 | ~8 | Pi 4: micro-HDMI |
+| 3 | Micro-HDMI → HDMI -adapteri | UGREEN flat / CY 90° kulma | **2** | ~16 | Yksi per HDMI-portti |
 | 4 | USB-C-virtakaapeli | 30 cm, 5V/3A | 1 | ~8 | Pi 4 vaatii USB-C |
 | 5 | Jäähdytyslevy + tuuletin | Alumiinikotelo tai aktiivijäähdytys | 1 | ~8 | 4K-dekoodaus kuumentaa |
 | 6 | 3D-tulostettu kotelo | PETG (lämmönkesto) | 1 | ~5 | Isompi kuin Lite, tuuletusaukot |
 
 **Huomio:** Pi 4 suositellaan Pi 5:n sijaan — Pi 4:ssä on H.265 HW-dekooderi, Pi 5:ssä ei.
 
-| | **4K yhteensä: ~84 €/kpl** |
+| | **4K Dual yhteensä: ~92 €** |
 |---|---|
 
-## Valinnainen (molemmat profiilit)
+## Valinnainen
 
 | # | Komponentti | Tuote | Kpl | Hinta (€) | Huomiot |
 |---|-------------|-------|-----|-----------|---------|
@@ -46,8 +48,10 @@
 
 ## Kokonaiskustannus
 
-| Kokoonpano | Hinta |
-|---|---|
-| 1× Lite (läppäri, AirPlay) | ~48 € |
-| 2× 4K (Mac Mini, NDI) | ~168 € |
-| **Kaikki 3 donglea** | **~216 €** |
+| Kokoonpano | Laitteet | Hinta |
+|---|---|---|
+| 1× Lite (läppäri → 1080p) | Pi Zero 2 W | ~48 € |
+| 1× 4K Dual (Mac Mini → 2× 4K) | Pi 4 | ~92 € |
+| **Yhteensä** | **2 Pi:tä, 3 näyttöä** | **~140 €** |
+
+Säästö edelliseen (2× Pi 4): **~76 €**
