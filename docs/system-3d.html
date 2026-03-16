@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Wireless Display Dongle — 3D System View</title>
+<style>
+  body { margin: 0; overflow: hidden; background: #0a0a1a; font-family: -apple-system, sans-serif; }
+  canvas { display: block; }
+  #info {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255,255,255,0.4);
+    font-size: 12px;
+    text-align: center;
+  }
+  #title {
+    position: absolute;
+    top: 30px;
+    left: 40px;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 700;
+  }
+  #title span { color: #818cf8; }
+</style>
+</head>
+<body>
+<div id="title">Wireless Display <span>Dongle</span> — System Overview</div>
+<div id="info">Drag to rotate · Scroll to zoom</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+
+// Scene
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0a1a);
+scene.fog = new THREE.FogExp2(0x0a0a1a, 0.012);
+
+// Camera
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
+camera.position.set(0, 18, 32);
+camera.lookAt(0, 0, 0);
+
+// Renderer
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+
+// Controls
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.minDistance = 10;
+controls.maxDistance = 60;
+controls.target.set(0, 2, 0);
+
+// Lights
+const ambient = new THREE.AmbientLight(0x404060, 0.6);
+scene.add(ambient);
+
+const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+dirLight.position.set(10, 20, 10);
+dirLight.castShadow = true;
+dirLight.shadow.mapSize.set(2048, 2048);
+scene.add(dirLight);
+
+const pointLight1 = new THREE.PointLight(0x818cf8, 0.8, 40);
+pointLight1.position.set(-8, 8, 0);
+scene.add(pointLight1);
+
+const pointLight2 = new THREE.PointLight(0x6ee7b7, 0.5, 40);
+pointLight2.position.set(12, 6, -4);
+scene.add(pointLight2);
+
+// Ground
+const groundGeo = new THREE.PlaneGeometry(80, 80);
+const groundMat = new THREE.MeshStandardMaterial({ color: 0x0f0f2a, roughness: 0.9 });
+const ground = new THREE.Mesh(groundGeo, groundMat);
+ground.rotation.x = -Math.PI / 2;
+ground.position.y = -0.5;
+ground.receiveShadow = true;
+scene.add(ground);
+
+// Grid
+const grid = new THREE.GridHelper(60, 30, 0x1a1a3a, 0x1a1a3a);
+grid.position.y = -0.49;
+scene.add(grid);
+
+// Materials
+const matC64 = new THREE.MeshStandardMaterial({ color: 0x8B7355, roughness: 0.6, metalness: 0.1 });
+const matC64Keys = new THREE.MeshStandardMaterial({ color: 0x5a4a3a, roughness: 0.8 });
+const matPicoBoard = new THREE.MeshStandardMaterial({ color: 0x1a8a3a, roughness: 0.4, metalness: 0.2 });
+const matPiZero = new THREE.MeshStandardMaterial({ color: 0x2a9a4a, roughness: 0.4, metalness: 0.2 });
+const matPi4 = new THREE.MeshStandardMaterial({ color: 0x2a8a5a, roughness: 0.4, metalness: 0.2 });
+const matDisplay = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.3, metalness: 0.5 });
+const matScreen = new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0x111133, roughness: 0.1 });
+const matScreen4k = new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0x113311, roughness: 0.1 });
+const matMac = new THREE.MeshStandardMaterial({ color: 0xc0c0c8, roughness: 0.2, metalness: 0.8 });
+const matMacScreen = new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0x1a1a3a, roughness: 0.1 });
+const matCable = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.8 });
+const matWifi = new THREE.MeshStandardMaterial({ color: 0x818cf8, transparent: true, opacity: 0.3, side: THREE.DoubleSide });
+const matHdmi = new THREE.MeshStandardMaterial({ color: 0x4444aa, roughness: 0.3, metalness: 0.5 });
+
+// === DEVICES ===
+
+// Commodore 64
+function createC64(x, z) {
+  const group = new THREE.Group();
+  // Main body
+  const body = new THREE.Mesh(new THREE.BoxGeometry(5, 0.6, 3), matC64);
+  body.position.y = 0.3;
+  body.castShadow = true;
+  group.add(body);
+  // Keyboard area
+  const keys = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.08, 2), matC64Keys);
+  keys.position.set(0, 0.65, -0.2);
+  group.add(keys);
+  // Label
+  addLabel(group, "Commodore 64", 0, 1.2, 0, 0.35);
+  group.position.set(x, 0, z);
+  scene.add(group);
+  return group;
+}
+
+// Pi Pico
+function createPico(x, z) {
+  const group = new THREE.Group();
+  const board = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.15, 2.1), matPicoBoard);
+  board.position.y = 0.5;
+  board.castShadow = true;
+  group.add(board);
+  // Chip
+  const chip = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.08, 0.4), new THREE.MeshStandardMaterial({ color: 0x111111 }));
+  chip.position.set(0, 0.62, 0);
+  group.add(chip);
+  addLabel(group, "Pi Pico", 0, 1.2, 0, 0.28);
+  addLabel(group, "PIO Bus Snoop", 0, 0.85, 0, 0.2, 0x818cf8);
+  group.position.set(x, 0, z);
+  scene.add(group);
+  return group;
+}
+
+// Pi Zero 2W
+function createPiZero(x, z, label, sublabel) {
+  const group = new THREE.Group();
+  const board = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.15, 1), matPiZero);
+  board.position.y = 0.5;
+  board.castShadow = true;
+  group.add(board);
+  // Chip
+  const chip = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 0.5), new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8 }));
+  chip.position.set(0, 0.63, 0);
+  group.add(chip);
+  addLabel(group, label || "Pi Zero 2W", 0, 1.2, 0, 0.28);
+  if (sublabel) addLabel(group, sublabel, 0, 0.85, 0, 0.2, 0x6ee7b7);
+  group.position.set(x, 0, z);
+  scene.add(group);
+  return group;
+}
+
+// Pi 4
+function createPi4(x, z) {
+  const group = new THREE.Group();
+  const board = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.2, 1.9), matPi4);
+  board.position.y = 0.5;
+  board.castShadow = true;
+  group.add(board);
+  // SoC
+  const soc = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.12, 0.6), new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8 }));
+  soc.position.set(-0.3, 0.66, 0);
+  group.add(soc);
+  // USB ports
+  const usb = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.35, 0.5), new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.6 }));
+  usb.position.set(1.3, 0.7, -0.3);
+  group.add(usb);
+  const usb2 = usb.clone();
+  usb2.position.z = 0.3;
+  group.add(usb2);
+  // HDMI ports
+  const hdmi1 = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.15, 0.25), matHdmi);
+  hdmi1.position.set(-0.5, 0.68, -0.95);
+  group.add(hdmi1);
+  const hdmi2 = hdmi1.clone();
+  hdmi2.position.x = 0.2;
+  group.add(hdmi2);
+  addLabel(group, "Pi 4", 0, 1.4, 0, 0.3);
+  addLabel(group, "NDI 4K Receiver", 0, 1.0, 0, 0.2, 0x6ee7b7);
+  group.position.set(x, 0, z);
+  scene.add(group);
+  return group;
+}
+
+// Display
+function createDisplay(x, z, size, label, screenMat) {
+  const group = new THREE.Group();
+  const w = size;
+  const h = size * 0.6;
+  // Bezel
+  const bezel = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.15), matDisplay);
+  bezel.position.y = h / 2 + 1.5;
+  bezel.castShadow = true;
+  group.add(bezel);
+  // Screen
+  const scr = new THREE.Mesh(new THREE.PlaneGeometry(w - 0.3, h - 0.3), screenMat || matScreen);
+  scr.position.set(0, h / 2 + 1.5, 0.08);
+  group.add(scr);
+  // Stand
+  const stand = new THREE.Mesh(new THREE.BoxGeometry(0.3, 1.5, 0.3), matDisplay);
+  stand.position.y = 0.75;
+  group.add(stand);
+  const base = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.1, 0.8), matDisplay);
+  base.position.y = 0.05;
+  group.add(base);
+  addLabel(group, label, 0, h + 2.2, 0, 0.25);
+  group.position.set(x, 0, z);
+  scene.add(group);
+  return group;
+}
+
+// MacBook
+function createMacBook(x, z) {
+  const group = new THREE.Group();
+  // Base
+  const base = new THREE.Mesh(new THREE.BoxGeometry(3, 0.12, 2.2), matMac);
+  base.position.y = 0.06;
+  base.castShadow = true;
+  group.add(base);
+  // Screen (angled)
+  const screen = new THREE.Mesh(new THREE.BoxGeometry(3, 2, 0.08), matMac);
+  screen.position.set(0, 1.1, -1.04);
+  screen.rotation.x = -0.15;
+  group.add(screen);
+  const scr = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 1.7), matMacScreen);
+  scr.position.set(0, 1.1, -0.98);
+  scr.rotation.x = -0.15;
+  group.add(scr);
+  addLabel(group, "MacBook", 0, 2.5, -1, 0.3);
+  addLabel(group, "AirPlay 1080p", 0, 2.1, -1, 0.2, 0x818cf8);
+  group.position.set(x, 0, z);
+  scene.add(group);
+  return group;
+}
+
+// Mac Mini
+function createMacMini(x, z) {
+  const group = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 0.3, 32), matMac);
+  body.position.y = 0.15;
+  body.castShadow = true;
+  group.add(body);
+  addLabel(group, "Mac Mini", 0, 1.0, 0, 0.3);
+  addLabel(group, "NDI 4K", 0, 0.6, 0, 0.2, 0xfcd34d);
+  group.position.set(x, 0, z);
+  scene.add(group);
+  return group;
+}
+
+// Labels (sprite-based)
+function addLabel(parent, text, x, y, z, size, color) {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = 512;
+  canvas.height = 64;
+  ctx.fillStyle = 'transparent';
+  ctx.fillRect(0, 0, 512, 64);
+  ctx.font = 'bold 32px -apple-system, Helvetica, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = color ? '#' + color.toString(16).padStart(6, '0') : '#ffffff';
+  ctx.fillText(text, 256, 42);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  const mat = new THREE.SpriteMaterial({ map: texture, transparent: true });
+  const sprite = new THREE.Sprite(mat);
+  sprite.position.set(x, y, z);
+  sprite.scale.set(size * 8, size, 1);
+  parent.add(sprite);
+}
+
+// Connection lines
+function createConnection(from, to, color, dashed, yOffset) {
+  const y = yOffset || 1.2;
+  const points = [
+    new THREE.Vector3(from.position.x, y, from.position.z),
+    new THREE.Vector3(to.position.x, y, to.position.z)
+  ];
+  const geo = new THREE.BufferGeometry().setFromPoints(points);
+  let mat;
+  if (dashed) {
+    mat = new THREE.LineDashedMaterial({ color, dashSize: 0.3, gapSize: 0.15, transparent: true, opacity: 0.6 });
+  } else {
+    mat = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.7 });
+  }
+  const line = new THREE.Line(geo, mat);
+  if (dashed) line.computeLineDistances();
+  scene.add(line);
+  return line;
+}
+
+// Wi-Fi wave rings
+function createWifiWaves(x, y, z) {
+  const waves = [];
+  for (let i = 0; i < 3; i++) {
+    const geo = new THREE.RingGeometry(0.5 + i * 0.8, 0.6 + i * 0.8, 32);
+    const mesh = new THREE.Mesh(geo, matWifi.clone());
+    mesh.position.set(x, y, z);
+    mesh.rotation.y = Math.PI / 2;
+    scene.add(mesh);
+    waves.push(mesh);
+  }
+  return waves;
+}
+
+// === BUILD SCENE ===
+
+// Left side: Sources
+const c64 = createC64(-14, 4);
+const pico = createPico(-10, 4);
+const piZeroTx = createPiZero(-7.5, 4, "Pi Zero 2W", "C64 TX");
+const macbook = createMacBook(-10, -2);
+const macmini = createMacMini(-10, -6);
+
+// Center: Wi-Fi
+const waves1 = createWifiWaves(-2, 3, 4);
+const waves2 = createWifiWaves(-2, 3, -2);
+const waves3 = createWifiWaves(-2, 3, -6);
+
+// Right side: Receivers + Displays
+const piZeroRx = createPiZero(4, -2, "Pi Zero 2W", "AirPlay RX");
+const pi4 = createPi4(4, -6);
+
+const display1080 = createDisplay(10, -2, 4, "1080p Display", matScreen);
+const display4k1 = createDisplay(10, -6, 4.5, "4K Display 1", matScreen4k);
+const display4k2 = createDisplay(15, -6, 4.5, "4K Display 2", matScreen4k);
+
+// Connections
+createConnection(c64, pico, 0xfcd34d, false, 0.6);       // C64 → Pico (bus)
+createConnection(pico, piZeroTx, 0x818cf8, false, 0.6);   // Pico → Pi Zero (SPI)
+createConnection(piZeroTx, piZeroRx, 0x818cf8, true, 2);  // Wi-Fi
+createConnection(macbook, piZeroRx, 0x818cf8, true, 2);    // AirPlay Wi-Fi
+createConnection(macmini, pi4, 0xfcd34d, true, 2);         // NDI Wi-Fi
+createConnection(piZeroRx, display1080, 0x6ee7b7, false, 2); // HDMI
+createConnection(pi4, display4k1, 0x6ee7b7, false, 2);      // HDMI 0
+createConnection(pi4, display4k2, 0x6ee7b7, false, 2);      // HDMI 1
+
+// Connection labels
+function addWorldLabel(text, x, y, z, size, color) {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = 256;
+  canvas.height = 32;
+  ctx.font = '18px -apple-system, Helvetica, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = color || '#888';
+  ctx.fillText(text, 128, 22);
+  const texture = new THREE.CanvasTexture(canvas);
+  const mat = new THREE.SpriteMaterial({ map: texture, transparent: true });
+  const sprite = new THREE.Sprite(mat);
+  sprite.position.set(x, y, z);
+  sprite.scale.set(size * 6, size * 0.8, 1);
+  scene.add(sprite);
+}
+
+addWorldLabel("BUS", -12, 1.5, 4, 0.3, '#fcd34d');
+addWorldLabel("SPI", -8.8, 1.5, 4, 0.3, '#818cf8');
+addWorldLabel("Wi-Fi", -2, 4.2, 4, 0.35, '#818cf8');
+addWorldLabel("Wi-Fi", -2, 4.2, -2, 0.35, '#818cf8');
+addWorldLabel("Wi-Fi", -2, 4.2, -6, 0.35, '#fcd34d');
+addWorldLabel("HDMI", 7, 3, -2, 0.3, '#6ee7b7');
+addWorldLabel("HDMI 0", 7, 3, -6, 0.3, '#6ee7b7');
+addWorldLabel("HDMI 1", 12.5, 3, -6, 0.3, '#6ee7b7');
+
+// Animate
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+
+  const t = Date.now() * 0.001;
+
+  // Pulse Wi-Fi waves
+  [...waves1, ...waves2, ...waves3].forEach((w, i) => {
+    w.material.opacity = 0.15 + 0.15 * Math.sin(t * 2 + i * 1.5);
+    const s = 1 + 0.05 * Math.sin(t * 1.5 + i);
+    w.scale.set(s, s, s);
+  });
+
+  // Gentle screen glow
+  matScreen.emissive.setHSL(0.65, 0.5, 0.03 + 0.01 * Math.sin(t));
+  matScreen4k.emissive.setHSL(0.35, 0.5, 0.03 + 0.01 * Math.sin(t * 0.8));
+  matMacScreen.emissive.setHSL(0.65, 0.3, 0.04 + 0.01 * Math.sin(t * 1.2));
+
+  renderer.render(scene, camera);
+}
+
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>

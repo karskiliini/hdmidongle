@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(ffmpeg:*)",
+      "Bash(brew info:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(open:*)",
+      "Bash(gh repo:*)",
+      "Bash(brew install:*)",
+      "Bash(curl:*)",
+      "Bash(/tmp/gh/gh_2.65.0_macOS_amd64/bin/gh --version)",
+      "Bash(/tmp/gh/gh_2.65.0_macOS_amd64/bin/gh auth:*)",
+      "Bash(git push:*)",
+      "WebFetch(domain:www.verkkokauppa.com)",
+      "WebFetch(domain:thepihut.com)",
+      "WebFetch(domain:shop.pimoroni.com)",
+      "WebFetch(domain:www.berrybase.de)",
+      "WebFetch(domain:botland.store)",
+      "WebFetch(domain:shop.vadelmapii.com)",
+      "WebFetch(domain:www.digikey.fi)",
+      "WebFetch(domain:www.partco.fi)",
+      "WebFetch(domain:www.lcsc.com)",
+      "Bash(git mv:*)"
+    ]
+  }
+}

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C64 Wireless — Pitch</title>
+<style>
+  @page { size: A4 landscape; margin: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+    background: #111118;
+    color: #d4d4d8;
+    font-size: 10.5px;
+    line-height: 1.45;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .slide {
+    width: 297mm;
+    height: 210mm;
+    padding: 18mm 22mm;
+    page-break-after: always;
+    position: relative;
+    background: #111118;
+  }
+  .slide:last-child { page-break-after: auto; }
+  .footer {
+    position: absolute;
+    bottom: 10mm;
+    left: 22mm;
+    right: 22mm;
+    display: flex;
+    justify-content: space-between;
+    font-size: 7.5px;
+    color: #444;
+  }
+  h1 { font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 3px; }
+  h2 { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  h3 { font-size: 10.5px; font-weight: 700; margin-bottom: 3px; color: #a5b4fc; }
+  .subtitle { font-size: 11px; color: #71717a; margin-bottom: 12px; }
+  .accent { color: #818cf8; }
+  p { margin-bottom: 5px; }
+  table { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 8px; }
+  th { text-align: left; padding: 4px 7px; background: #1a1a28; font-weight: 600; border-bottom: 1px solid #2a2a3a; font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.03em; color: #71717a; }
+  td { padding: 4px 7px; border-bottom: 1px solid #1e1e2e; }
+  .highlight-row td { background: #1a1a30; }
+  .val { color: #a5b4fc; font-weight: 600; }
+  .mono { font-family: "SF Mono", "Fira Code", monospace; font-size: 9px; background: #0a0a14; border: 1px solid #1e1e2e; border-radius: 6px; padding: 10px 14px; line-height: 1.55; white-space: pre; margin-bottom: 8px; color: #a1a1aa; }
+  .cols { display: flex; gap: 14px; }
+  .col { flex: 1; }
+  .card { background: #1a1a28; border: 1px solid #2a2a3a; border-radius: 6px; padding: 10px 12px; margin-bottom: 7px; }
+  .stat-row { display: flex; gap: 10px; margin-bottom: 10px; }
+  .stat { flex: 1; text-align: center; background: #1a1a28; border: 1px solid #2a2a3a; border-radius: 6px; padding: 8px 4px; }
+  .stat-val { font-size: 18px; font-weight: 800; color: #818cf8; }
+  .stat-lbl { font-size: 7.5px; color: #555; margin-top: 1px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 8px; font-weight: 600; }
+  .pill-blue { background: #1e1e3a; color: #818cf8; }
+  .pill-green { background: #1a2a1a; color: #6ee7b7; }
+  .small { font-size: 8.5px; color: #555; }
+  ul { margin-left: 12px; margin-bottom: 6px; }
+  li { margin-bottom: 1px; color: #a1a1aa; }
+  .slide-3d { padding: 0; background: #0a0a1a; }
+  .slide-3d iframe { width: 100%; height: 100%; border: none; }
+  @media print {
+    .slide-3d { break-before: always; }
+    body { background: #111118; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1: Title -->
+<div class="slide">
+  <div>
+    <div><span class="pill pill-blue">OPEN SOURCE</span> <span class="pill pill-green">RASPBERRY PI</span></div>
+    <h1 style="margin-top:8px">C64 Wireless</h1>
+    <p class="subtitle">Pixel-perfect wireless video from a Commodore 64 to any HDMI display.</p>
+    <div class="mono">C64 ──bus──→ Pi Pico ──SPI──→ Pi Zero 2W ──Wi-Fi──→ Receiver ──HDMI──→ Display
+
+  Passive bus snooping          Row-by-row UDP         Direct framebuffer write
+  Shadow frame buffer           ~140 bytes/row         No video codec needed</div>
+    <div class="stat-row" style="max-width:480px">
+      <div class="stat"><div class="stat-val">~9ms</div><div class="stat-lbl">Avg Latency</div></div>
+      <div class="stat"><div class="stat-val">140B</div><div class="stat-lbl">Per Scanline</div></div>
+      <div class="stat"><div class="stat-val">39&euro;</div><div class="stat-lbl">Transmitter BOM</div></div>
+      <div class="stat"><div class="stat-val">0</div><div class="stat-lbl">Wires to Display</div></div>
+    </div>
+    <div class="cols" style="margin-top:6px">
+      <div class="col">
+        <h3>Why not analog capture?</h3>
+        <ul>
+          <li>40–80 ms latency — unplayable for games</li>
+          <li>S-Video is blurry, chain of adapters</li>
+          <li>RetroTINK costs 300 EUR, still wired</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h3>Why bus snooping?</h3>
+        <ul>
+          <li>Read digital data before it becomes analog</li>
+          <li>Passive — zero impact on C64</li>
+          <li>Per-scanline VIC-II state capture</li>
+          <li>No video encoding/decoding needed</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>C64 Wireless</span><span>1 / 5</span></div>
+</div>
+
+<!-- SLIDE 2: 3D System View -->
+<div class="slide slide-3d">
+  <iframe src="c64-3d.html"></iframe>
+  <div class="footer" style="color:rgba(255,255,255,0.2)"><span>C64 Wireless — System Architecture</span><span>2 / 5</span></div>
+</div>
+
+<!-- SLIDE 3: Comparison + How It Works -->
+<div class="slide">
+  <h2><span class="accent">Comparison</span> &amp; How It Works</h2>
+  <table>
+    <tr><th></th><th>Analog Capture (USB)</th><th>RetroTINK 4K</th><th style="color:#818cf8">C64 Wireless (ours)</th></tr>
+    <tr><td>Latency</td><td>40–80 ms</td><td>~5 ms</td><td class="val">~9 ms avg</td></tr>
+    <tr><td>Image quality</td><td>S-Video (blurry)</td><td>Analog upscaled</td><td class="val">Pixel-perfect digital</td></tr>
+    <tr><td>Wireless</td><td>No</td><td>No</td><td class="val">Yes (Wi-Fi)</td></tr>
+    <tr><td>Raster effects</td><td>Yes (analog)</td><td>Yes (analog)</td><td class="val">Yes (per-scanline VIC-II)</td></tr>
+    <tr><td>Price</td><td>~30 &euro;</td><td>~300 &euro;</td><td class="val">~39 &euro;</td></tr>
+  </table>
+  <div class="cols">
+    <div class="col">
+      <div class="card">
+        <h3>1. Bus Snooping (Pi Pico)</h3>
+        <p>PIO reads C64 expansion port every PHI2 cycle (1 MHz). Captures writes to screen RAM, color RAM, bitmap, VIC-II registers. Builds shadow frame buffer.</p>
+      </div>
+      <div class="card">
+        <h3>2. SPI Transfer</h3>
+        <p>Pico sends each scanline to Pi Zero via SPI @ 10 MHz. ~140 bytes/row: screen + color + bitmap + VIC-II deltas.</p>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card">
+        <h3>3. Wi-Fi Transmission</h3>
+        <p>Pi Zero sends each row as raw UDP. No codec. 140 bytes = single Ethernet frame. Total ~1.4 MB/s @ 50 fps.</p>
+      </div>
+      <div class="card">
+        <h3>4. Framebuffer Render</h3>
+        <p>Receiver writes rows to /dev/fb0. HDMI reads at 60 Hz. Latency: 0–16.7 ms per row (avg ~8 ms) depending on HDMI sync.</p>
+      </div>
+    </div>
+  </div>
+  <div class="mono" style="font-size:8.5px;padding:8px 12px">Latency: Pico reads row 0.064ms → SPI 0.08ms → UDP 0.5ms → fb write 0.01ms → HDMI sync 0–16.7ms = <span style="color:#818cf8">~1–17ms (avg ~9ms)</span></div>
+  <div class="footer"><span>C64 Wireless</span><span>3 / 5</span></div>
+</div>
+
+<!-- SLIDE 4: BOM + Demoscene -->
+<div class="slide">
+  <h2>Hardware &amp; <span class="accent">Compatibility</span></h2>
+  <div class="cols">
+    <div class="col">
+      <h3>Transmitter BOM</h3>
+      <table>
+        <tr><th>Component</th><th>Role</th><th style="text-align:right">Price</th></tr>
+        <tr><td>Pi Pico (RP2040)</td><td style="color:#71717a">Bus snooping via PIO</td><td style="text-align:right" class="val">~5 &euro;</td></tr>
+        <tr><td>Level shifters 3&times;8ch</td><td style="color:#71717a">5V &rarr; 3.3V</td><td style="text-align:right" class="val">~6 &euro;</td></tr>
+        <tr><td>Expansion port connector</td><td style="color:#71717a">44-pin edge</td><td style="text-align:right" class="val">~5 &euro;</td></tr>
+        <tr><td>Pi Zero 2 W</td><td style="color:#71717a">Wi-Fi TX</td><td style="text-align:right" class="val">~18 &euro;</td></tr>
+        <tr><td>PCB</td><td style="color:#71717a">Interconnect</td><td style="text-align:right" class="val">~5 &euro;</td></tr>
+        <tr class="highlight-row"><td style="color:#fff"><strong>Total</strong></td><td></td><td style="text-align:right;color:#6ee7b7;font-weight:700">~39 &euro;</td></tr>
+      </table>
+      <p class="small">Receiver uses existing Wireless Display Dongle. No extra hardware.</p>
+      <h3 style="margin-top:8px">Memory Map</h3>
+      <div class="mono" style="font-size:8.5px;padding:6px 10px">$0400–$07FF  Screen RAM  (1000B)
+$D800–$DBFF  Color RAM   (1000B)
+$D000–$D3FF  VIC-II regs
+$2000–$3FFF  Bitmap data (8000B)</div>
+    </div>
+    <div class="col">
+      <h3>Demoscene Raster Effects</h3>
+      <p>Per-scanline VIC-II register tracking preserves all raster tricks:</p>
+      <ul>
+        <li>Raster bars (color splits per line)</li>
+        <li>FLD / FLI (flexible line distance)</li>
+        <li>Split-screen text/bitmap modes</li>
+        <li>Sprite multiplexing</li>
+        <li>DYCP scrollers</li>
+        <li>Open border tricks</li>
+        <li>VSP (variable screen position)</li>
+      </ul>
+      <div class="card" style="margin-top:6px">
+        <h3>How raster capture works</h3>
+        <p>Every VIC-II register write is tagged with the current raster line ($D012). The receiver replays register changes at the exact scanline, reproducing mid-frame color changes, mode switches, and scroll offsets.</p>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>C64 Wireless</span><span>4 / 5</span></div>
+</div>
+
+<!-- SLIDE 5: Ecosystem -->
+<div class="slide">
+  <h2>Part of a <span class="accent">Bigger System</span></h2>
+  <p style="margin-bottom:8px;color:#71717a">C64 Wireless integrates with the Wireless Display Dongle ecosystem. One receiver handles all sources.</p>
+  <div class="mono">Commodore 64 ──bus──&gt; Pico + Pi Zero ──Wi-Fi──┐
+                                                  ▼
+MacBook ────────── AirPlay 1080p ──Wi-Fi──&gt;  Pi Zero 2W ──HDMI──&gt; 1080p Display
+
+Mac Mini ───────── NDI 4K ─────── Wi-Fi──&gt;  Pi 4 ──HDMI 0──&gt; 4K Display 1
+                                                  ──HDMI 1──&gt; 4K Display 2
+
+Auto-switching: IDLE → scan NDI → scan AirPlay → active → disconnect → IDLE</div>
+  <div class="cols" style="margin-top:8px">
+    <div class="col">
+      <h3>Full System BOM</h3>
+      <table>
+        <tr><th>Module</th><th>Hardware</th><th style="text-align:right">Cost</th></tr>
+        <tr><td>C64 Transmitter</td><td style="color:#71717a">Pico + Pi Zero 2W</td><td style="text-align:right" class="val">~39 &euro;</td></tr>
+        <tr><td>Lite Dongle (1080p)</td><td style="color:#71717a">Pi Zero 2W</td><td style="text-align:right" class="val">~48 &euro;</td></tr>
+        <tr><td>4K Dual Dongle</td><td style="color:#71717a">Pi 4 (2GB)</td><td style="text-align:right" class="val">~92 &euro;</td></tr>
+        <tr class="highlight-row"><td style="color:#fff"><strong>Total system</strong></td><td style="color:#71717a"><strong>3 displays + C64</strong></td><td style="text-align:right;color:#6ee7b7;font-weight:700">~179 &euro;</td></tr>
+      </table>
+    </div>
+    <div class="col">
+      <h3>Dongle Setup</h3>
+      <div class="card" style="margin-bottom:5px">
+        <p><strong style="color:#fff">Unconfigured:</strong> Plug in → HDMI shows setup instructions → connect phone to Dongle Wi-Fi hotspot → configure via web UI</p>
+      </div>
+      <div class="card" style="margin-bottom:5px">
+        <p><strong style="color:#fff">Configured:</strong> Plug in → auto-connects Wi-Fi → appears on local network → ready to receive</p>
+      </div>
+      <div class="card">
+        <p><strong style="color:#fff">Mac USB:</strong> Plug dongle into Mac via USB → DongleConfig app auto-launches → configure</p>
+      </div>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:8px">
+    <span class="pill pill-blue">Open Source</span>
+    <span class="pill pill-green">github.com/karskiliini/hdmidongle</span>
+  </div>
+  <div class="footer"><span>C64 Wireless</span><span>5 / 5</span></div>
+</div>
+
+</body>
+</html>

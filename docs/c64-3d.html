@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>C64 Wireless — 3D</title>
+<style>
+  body { margin: 0; overflow: hidden; background: #0a0a1a; }
+  canvas { display: block; }
+  #info { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); color: rgba(255,255,255,0.3); font-size: 11px; font-family: -apple-system, sans-serif; }
+</style>
+</head>
+<body>
+<div id="info">Drag to rotate · Scroll to zoom</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x12121e);
+
+const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 200);
+camera.position.set(2, 10, 20);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+document.body.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.target.set(2, 1.5, 0);
+
+// === LIGHTING (studio setup) ===
+scene.add(new THREE.AmbientLight(0x303050, 0.4));
+
+const key = new THREE.DirectionalLight(0xffeedd, 1.2);
+key.position.set(8, 14, 8);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.camera.near = 1;
+key.shadow.camera.far = 40;
+key.shadow.camera.left = -15;
+key.shadow.camera.right = 15;
+key.shadow.camera.top = 15;
+key.shadow.camera.bottom = -15;
+key.shadow.bias = -0.001;
+scene.add(key);
+
+const fill = new THREE.DirectionalLight(0x8888cc, 0.4);
+fill.position.set(-6, 6, -4);
+scene.add(fill);
+
+const rim = new THREE.PointLight(0x818cf8, 0.6, 30);
+rim.position.set(-3, 5, -6);
+scene.add(rim);
+
+const warm = new THREE.PointLight(0xffaa66, 0.3, 20);
+warm.position.set(12, 4, 2);
+scene.add(warm);
+
+// === ENVIRONMENT ===
+const ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(50, 50),
+  new THREE.MeshStandardMaterial({ color: 0x16162a, roughness: 0.85, metalness: 0 })
+);
+ground.rotation.x = -Math.PI / 2;
+ground.receiveShadow = true;
+scene.add(ground);
+
+// Subtle reflection plane
+const reflGround = new THREE.Mesh(
+  new THREE.PlaneGeometry(50, 50),
+  new THREE.MeshStandardMaterial({ color: 0x16162a, roughness: 0.6, metalness: 0.15, transparent: true, opacity: 0.3 })
+);
+reflGround.rotation.x = -Math.PI / 2;
+reflGround.position.y = 0.001;
+scene.add(reflGround);
+
+// === MATERIALS (PBR) ===
+const matPCB = (color) => new THREE.MeshStandardMaterial({ color, roughness: 0.35, metalness: 0.1 });
+const matSilver = new THREE.MeshStandardMaterial({ color: 0xd0d0d8, roughness: 0.2, metalness: 0.9 });
+const matBlackChip = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.4, metalness: 0.1 });
+const matGold = new THREE.MeshStandardMaterial({ color: 0xdaa520, roughness: 0.3, metalness: 0.9 });
+const matBlackPlastic = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.5, metalness: 0.05 });
+const matUSB = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, roughness: 0.3, metalness: 0.8 });
+const matHDMI = new THREE.MeshStandardMaterial({ color: 0x333366, roughness: 0.3, metalness: 0.6 });
+const matBrownPlastic = new THREE.MeshStandardMaterial({ color: 0x8B7355, roughness: 0.55, metalness: 0.02 });
+const matDarkBrown = new THREE.MeshStandardMaterial({ color: 0x4a3a28, roughness: 0.7 });
+const matConnector = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.6, metalness: 0.1 });
+const matCopperTrace = new THREE.MeshStandardMaterial({ color: 0xb87333, roughness: 0.4, metalness: 0.7 });
+const matLED = (color) => new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 2, roughness: 0.2 });
+
+// Label helper
+function label(parent, text, x, y, z, size, color) {
+  const c = document.createElement('canvas');
+  const ctx = c.getContext('2d');
+  c.width = 512; c.height = 64;
+  ctx.font = '600 28px -apple-system, Helvetica, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = color || '#ffffff';
+  ctx.fillText(text, 256, 40);
+  const tex = new THREE.CanvasTexture(c);
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+  const s = new THREE.Sprite(mat);
+  s.position.set(x, y, z);
+  s.scale.set(size * 7, size * 0.9, 1);
+  parent.add(s);
+}
+
+// === C64 EXPANSION PORT CONNECTOR ===
+function createExpansionPort(x, z) {
+  const group = new THREE.Group();
+
+  // Connector housing
+  const housing = new THREE.Mesh(
+    new THREE.BoxGeometry(2.8, 0.7, 0.8),
+    matConnector
+  );
+  housing.position.y = 0.35;
+  housing.castShadow = true;
+  group.add(housing);
+
+  // Slot opening
+  const slot = new THREE.Mesh(
+    new THREE.BoxGeometry(2.4, 0.35, 0.3),
+    new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.9 })
+  );
+  slot.position.set(0, 0.5, 0);
+  group.add(slot);
+
+  // Gold edge connector pins (22 per side = 44 total)
+  for (let i = 0; i < 22; i++) {
+    const pin = new THREE.Mesh(
+      new THREE.BoxGeometry(0.04, 0.3, 0.02),
+      matGold
+    );
+    pin.position.set(-1.1 + i * 0.1, 0.35, 0.18);
+    group.add(pin);
+    const pin2 = pin.clone();
+    pin2.position.z = -0.18;
+    group.add(pin2);
+  }
+
+  // PCB edge (sticking out of connector)
+  const pcbEdge = new THREE.Mesh(
+    new THREE.BoxGeometry(2.3, 0.08, 0.6),
+    matPCB(0x1a6a2a)
+  );
+  pcbEdge.position.set(0, 0.72, 0);
+  group.add(pcbEdge);
+
+  // Copper traces on PCB edge
+  for (let i = 0; i < 22; i++) {
+    const trace = new THREE.Mesh(
+      new THREE.BoxGeometry(0.03, 0.005, 0.5),
+      matCopperTrace
+    );
+    trace.position.set(-1.1 + i * 0.1, 0.77, 0);
+    group.add(trace);
+  }
+
+  // Short ribbon cable to Pico
+  const cable = new THREE.Mesh(
+    new THREE.BoxGeometry(1.5, 0.04, 0.4),
+    new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.8 })
+  );
+  cable.position.set(1.8, 0.74, 0);
+  group.add(cable);
+
+  label(group, "C64 Expansion Port", 0, 1.5, 0, 0.25);
+  label(group, "44-pin Edge Connector", 0, 1.2, 0, 0.18, '#fcd34d');
+  group.position.set(x, 0, z);
+  scene.add(group);
+  return group;
+}
+
+// === LEVEL SHIFTERS ===
+function createLevelShifters(x, z) {
+  const group = new THREE.Group();
+
+  // Small PCB
+  const pcb = new THREE.Mesh(
+    new THREE.BoxGeometry(1.2, 0.08, 0.8),
+    matPCB(0x1a5a3a)
+  );
+  pcb.position.y = 0.5;
+  pcb.castShadow = true;
+  group.add(pcb);
+
+  // 3x level shifter ICs
+  for (let i = 0; i < 3; i++) {
+    const ic = new THREE.Mesh(
+      new THREE.BoxGeometry(0.25, 0.06, 0.15),
+      matBlackChip
+    );
+    ic.position.set(-0.3 + i * 0.3, 0.58, 0);
+    group.add(ic);
+
+    // Pins
+    for (let p = 0; p < 4; p++) {
+      const pin = new THREE.Mesh(
+        new THREE.BoxGeometry(0.01, 0.01, 0.04),
+        matSilver
+      );
+      pin.position.set(-0.3 + i * 0.3 - 0.08 + p * 0.05, 0.55, 0.1);
+      group.add(pin);
+      const pin2 = pin.clone();
+      pin2.position.z = -0.1;
+      group.add(pin2);
+    }
+  }
+
+  label(group, "Level Shifters", 0, 1.2, 0, 0.2);
+  label(group, "5V → 3.3V", 0, 0.95, 0, 0.16, '#888888');
+  group.position.set(x, 0, z);
+  scene.add(group);
+  return group;
+}
+
+// === RASPBERRY PI PICO ===
+function createPico(x, z) {
+  const group = new THREE.Group();
+
+  // PCB
+  const pcb = new THREE.Mesh(
+    new THREE.BoxGeometry(0.85, 0.1, 2.1),
+    matPCB(0x1a8a3a)
+  );
+  pcb.position.y = 0.5;
+  pcb.castShadow = true;
+  group.add(pcb);
+
+  // RP2040 chip (center)
+  const rp = new THREE.Mesh(
+    new THREE.BoxGeometry(0.4, 0.08, 0.4),
+    matBlackChip
+  );
+  rp.position.set(0, 0.59, 0);
+  group.add(rp);
+
+  // Chip text
+  const chipLabel = document.createElement('canvas');
+  const chipCtx = chipLabel.getContext('2d');
+  chipLabel.width = 128; chipLabel.height = 128;
+  chipCtx.fillStyle = '#222';
+  chipCtx.fillRect(0, 0, 128, 128);
+  chipCtx.font = 'bold 18px monospace';
+  chipCtx.fillStyle = '#888';
+  chipCtx.fillText('RP2040', 15, 60);
+  const chipTex = new THREE.CanvasTexture(chipLabel);
+  const chipFace = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.35, 0.35),
+    new THREE.MeshStandardMaterial({ map: chipTex, roughness: 0.4 })
+  );
+  chipFace.position.set(0, 0.636, 0);
+  chipFace.rotation.x = -Math.PI / 2;
+  group.add(chipFace);
+
+  // Flash chip
+  const flash = new THREE.Mesh(
+    new THREE.BoxGeometry(0.15, 0.05, 0.15),
+    matBlackChip
+  );
+  flash.position.set(0.2, 0.58, -0.6);
+  group.add(flash);
+
+  // Crystal
+  const crystal = new THREE.Mesh(
+    new THREE.BoxGeometry(0.1, 0.04, 0.06),
+    matSilver
+  );
+  crystal.position.set(-0.2, 0.56, -0.3);
+  group.add(crystal);
+
+  // Micro USB connector
+  const usb = new THREE.Mesh(
+    new THREE.BoxGeometry(0.3, 0.1, 0.22),
+    matUSB
+  );
+  usb.position.set(0, 0.56, -1.05);
+  group.add(usb);
+
+  // GPIO header holes (2 rows of 20)
+  for (let i = 0; i < 20; i++) {
+    for (let side = -1; side <= 1; side += 2) {
+      const hole = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.02, 0.02, 0.12, 8),
+        matGold
+      );
+      hole.position.set(side * 0.35, 0.5, -0.95 + i * 0.1);
+      group.add(hole);
+    }
+  }
+
+  // Green LED
+  const led = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.03, 0.03, 0.02, 8),
+    matLED(0x00ff00)
+  );
+  led.position.set(0.15, 0.56, 0.5);
+  group.add(led);
+
+  // Pico silkscreen label
+  const picoLabel = document.createElement('canvas');
+  const picoCtx = picoLabel.getContext('2d');
+  picoLabel.width = 256; picoLabel.height = 64;
+  picoCtx.font = 'bold 22px sans-serif';
+  picoCtx.fillStyle = '#ffffff';
+  picoCtx.fillText('Raspberry Pi Pico', 10, 35);
+  const picoTex = new THREE.CanvasTexture(picoLabel);
+  const picoSilk = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.6, 0.15),
+    new THREE.MeshBasicMaterial({ map: picoTex, transparent: true })
+  );
+  picoSilk.position.set(0, 0.56, 0.7);
+  picoSilk.rotation.x = -Math.PI / 2;
+  group.add(picoSilk);
+
+  label(group, "Pi Pico", 0, 1.6, 0, 0.26);
+  label(group, "PIO Bus Snoop", 0, 1.3, 0, 0.18, '#818cf8');
+
+  group.position.set(x, 0, z);
+  scene.add(group);
+  return group;
+}
+
+// === RASPBERRY PI ZERO 2 W ===
+function createPiZero(x, z, sublabel, sublabelColor) {
+  const group = new THREE.Group();
+
+  // PCB
+  const pcb = new THREE.Mesh(
+    new THREE.BoxGeometry(2.2, 0.1, 1.0),
+    matPCB(0x2a9a4a)
+  );
+  pcb.position.y = 0.5;
+  pcb.castShadow = true;
+  group.add(pcb);
+
+  // BCM2710A1 SoC (metal lid)
+  const soc = new THREE.Mesh(
+    new THREE.BoxGeometry(0.45, 0.1, 0.45),
+    matSilver
+  );
+  soc.position.set(-0.2, 0.61, 0);
+  group.add(soc);
+
+  // SoC label
+  const socLabel = document.createElement('canvas');
+  const socCtx = socLabel.getContext('2d');
+  socLabel.width = 128; socLabel.height = 128;
+  socCtx.fillStyle = '#cccccc';
+  socCtx.fillRect(0, 0, 128, 128);
+  socCtx.font = 'bold 14px monospace';
+  socCtx.fillStyle = '#444';
+  socCtx.fillText('BCM2710', 10, 55);
+  socCtx.fillText('A1', 40, 75);
+  const socTex = new THREE.CanvasTexture(socLabel);
+  const socFace = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.4, 0.4),
+    new THREE.MeshStandardMaterial({ map: socTex, roughness: 0.2, metalness: 0.8 })
+  );
+  socFace.position.set(-0.2, 0.665, 0);
+  socFace.rotation.x = -Math.PI / 2;
+  group.add(socFace);
+
+  // RAM chip
+  const ram = new THREE.Mesh(
+    new THREE.BoxGeometry(0.3, 0.06, 0.3),
+    matBlackChip
+  );
+  ram.position.set(0.4, 0.58, 0.1);
+  group.add(ram);
+
+  // Wi-Fi antenna area (metal shield)
+  const antenna = new THREE.Mesh(
+    new THREE.BoxGeometry(0.5, 0.06, 0.35),
+    new THREE.MeshStandardMaterial({ color: 0x999999, roughness: 0.3, metalness: 0.7 })
+  );
+  antenna.position.set(-0.75, 0.58, 0);
+  group.add(antenna);
+
+  // Mini HDMI
+  const hdmi = new THREE.Mesh(
+    new THREE.BoxGeometry(0.35, 0.1, 0.18),
+    matHDMI
+  );
+  hdmi.position.set(0.35, 0.56, -0.52);
+  group.add(hdmi);
+
+  // Micro USB (power)
+  const usbPwr = new THREE.Mesh(
+    new THREE.BoxGeometry(0.25, 0.08, 0.18),
+    matUSB
+  );
+  usbPwr.position.set(0.7, 0.56, -0.52);
+  group.add(usbPwr);
+
+  // Micro USB (data/OTG)
+  const usbData = new THREE.Mesh(
+    new THREE.BoxGeometry(0.25, 0.08, 0.18),
+    matUSB
+  );
+  usbData.position.set(0.05, 0.56, -0.52);
+  group.add(usbData);
+
+  // microSD slot
+  const sd = new THREE.Mesh(
+    new THREE.BoxGeometry(0.4, 0.06, 0.35),
+    matUSB
+  );
+  sd.position.set(-1.05, 0.48, 0);
+  group.add(sd);
+
+  // GPIO header
+  for (let i = 0; i < 20; i++) {
+    for (let row = 0; row < 2; row++) {
+      const pin = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.015, 0.015, 0.1, 6),
+        matGold
+      );
+      pin.position.set(-0.9 + i * 0.095, 0.5, 0.35 + row * 0.08);
+      group.add(pin);
+    }
+  }
+
+  // ACT LED
+  const led = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.02, 0.02, 0.015, 8),
+    matLED(0x00ff00)
+  );
+  led.position.set(0.9, 0.56, 0.2);
+  group.add(led);
+
+  // Silkscreen
+  const zkLabel = document.createElement('canvas');
+  const zkCtx = zkLabel.getContext('2d');
+  zkLabel.width = 512; zkLabel.height = 64;
+  zkCtx.font = '600 20px sans-serif';
+  zkCtx.fillStyle = '#ffffff';
+  zkCtx.fillText('Raspberry Pi Zero 2 W', 10, 35);
+  const zkTex = new THREE.CanvasTexture(zkLabel);
+  const zkSilk = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.2, 0.15),
+    new THREE.MeshBasicMaterial({ map: zkTex, transparent: true })
+  );
+  zkSilk.position.set(0.1, 0.56, 0.15);
+  zkSilk.rotation.x = -Math.PI / 2;
+  group.add(zkSilk);
+
+  label(group, "Pi Zero 2W", 0, 1.6, 0, 0.26);
+  if (sublabel) label(group, sublabel, 0, 1.3, 0, 0.18, sublabelColor || '#6ee7b7');
+
+  group.position.set(x, 0, z);
+  scene.add(group);
+  return group;
+}
+
+// === HDMI DISPLAY ===
+function createDisplay(x, z) {
+  const group = new THREE.Group();
+
+  // Bezel
+  const bezel = new THREE.Mesh(
+    new THREE.BoxGeometry(5.5, 3.3, 0.18),
+    new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3, metalness: 0.4 })
+  );
+  bezel.position.y = 3.4;
+  bezel.castShadow = true;
+  group.add(bezel);
+
+  // Screen
+  const screenMat = new THREE.MeshStandardMaterial({
+    color: 0x3344aa, emissive: 0x2233aa, emissiveIntensity: 0.4, roughness: 0.05, metalness: 0.1
+  });
+  const screen = new THREE.Mesh(new THREE.PlaneGeometry(5, 2.8), screenMat);
+  screen.position.set(0, 3.4, 0.1);
+  group.add(screen);
+
+  // C64 screen content
+  const scrCanvas = document.createElement('canvas');
+  const scrCtx = scrCanvas.getContext('2d');
+  scrCanvas.width = 512; scrCanvas.height = 256;
+  scrCtx.fillStyle = '#3344aa';
+  scrCtx.fillRect(0, 0, 512, 256);
+  // Border
+  scrCtx.fillStyle = '#7777cc';
+  scrCtx.fillRect(0, 0, 512, 20);
+  scrCtx.fillRect(0, 236, 512, 20);
+  scrCtx.fillRect(0, 0, 30, 256);
+  scrCtx.fillRect(482, 0, 30, 256);
+  // Text
+  scrCtx.font = '16px monospace';
+  scrCtx.fillStyle = '#7777ee';
+  scrCtx.fillText('    **** COMMODORE 64 BASIC V2 ****', 40, 50);
+  scrCtx.fillText(' 64K RAM SYSTEM  38911 BASIC BYTES FREE', 40, 70);
+  scrCtx.fillText('READY.', 40, 100);
+  scrCtx.fillText('\u2588', 90, 100);  // cursor
+  const scrTex = new THREE.CanvasTexture(scrCanvas);
+  const scrOverlay = new THREE.Mesh(
+    new THREE.PlaneGeometry(5, 2.8),
+    new THREE.MeshBasicMaterial({ map: scrTex, transparent: true, opacity: 0.9 })
+  );
+  scrOverlay.position.set(0, 3.4, 0.101);
+  group.add(scrOverlay);
+
+  // Thin stand
+  const neck = new THREE.Mesh(
+    new THREE.BoxGeometry(0.25, 1.6, 0.25),
+    new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.3, metalness: 0.5 })
+  );
+  neck.position.y = 0.9;
+  group.add(neck);
+
+  // Base
+  const base = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.2, 1.3, 0.1, 32),
+    new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.3, metalness: 0.5 })
+  );
+  base.position.y = 0.05;
+  base.castShadow = true;
+  group.add(base);
+
+  label(group, "HDMI Display", 0, 5.5, 0, 0.28);
+
+  group.position.set(x, 0, z);
+  scene.add(group);
+  return { group, screenMat };
+}
+
+// === BUILD SCENE ===
+
+const expPort = createExpansionPort(-8, 0);
+const levelShift = createLevelShifters(-5.2, 0);
+const pico = createPico(-3, 0);
+const piTx = createPiZero(-0.2, 0, "Wi-Fi TX", "#fcd34d");
+
+// Wi-Fi waves
+const wifiWaves = [];
+for (let i = 0; i < 3; i++) {
+  const ring = new THREE.Mesh(
+    new THREE.RingGeometry(0.8 + i * 1.0, 0.9 + i * 1.0, 48),
+    new THREE.MeshBasicMaterial({ color: 0x818cf8, transparent: true, opacity: 0.15, side: THREE.DoubleSide })
+  );
+  ring.position.set(4, 2, 0);
+  ring.rotation.y = Math.PI / 2;
+  scene.add(ring);
+  wifiWaves.push(ring);
+}
+
+const piRx = createPiZero(7.5, 0, "Receiver", "#6ee7b7");
+const { group: disp, screenMat } = createDisplay(13, 0);
+
+// === CONNECTIONS ===
+function makeCable(points, color, thickness) {
+  const curve = new THREE.CatmullRomCurve3(points);
+  const geo = new THREE.TubeGeometry(curve, 20, thickness || 0.03, 8, false);
+  const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.1 });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.castShadow = true;
+  scene.add(mesh);
+  return mesh;
+}
+
+// Expansion port → Level shifters (flat cable)
+makeCable([
+  new THREE.Vector3(-6.5, 0.74, 0),
+  new THREE.Vector3(-6, 0.7, 0),
+  new THREE.Vector3(-5.8, 0.55, 0),
+], 0x555555, 0.06);
+
+// Level shifters → Pico (jumper wires)
+for (let i = -1; i <= 1; i++) {
+  makeCable([
+    new THREE.Vector3(-4.6, 0.55, i * 0.15),
+    new THREE.Vector3(-4.0, 0.7, i * 0.15),
+    new THREE.Vector3(-3.5, 0.55, i * 0.15),
+  ], [0xff4444, 0x44ff44, 0x4444ff][i + 1], 0.015);
+}
+
+// Pico → Pi Zero TX (SPI cable)
+makeCable([
+  new THREE.Vector3(-2.5, 0.55, 0),
+  new THREE.Vector3(-1.8, 0.8, 0),
+  new THREE.Vector3(-1.3, 0.55, 0),
+], 0x888888, 0.03);
+
+// Pi Zero RX → Display (HDMI cable)
+makeCable([
+  new THREE.Vector3(8.6, 0.55, 0),
+  new THREE.Vector3(9.5, 0.4, 0),
+  new THREE.Vector3(10.5, 0.5, 0),
+  new THREE.Vector3(11, 1.5, 0),
+  new THREE.Vector3(11.5, 2.5, 0),
+], 0x222244, 0.04);
+
+// Connection labels
+function worldLabel(text, x, y, z, size, color) {
+  const g = new THREE.Group();
+  scene.add(g);
+  label(g, text, x, y, z, size, color);
+}
+
+worldLabel("BUS", -6.5, 1.5, 0, 0.2, '#fcd34d');
+worldLabel("5V→3.3V", -5.2, 1.7, 0, 0.16, '#888888');
+worldLabel("SPI", -1.8, 1.5, 0, 0.2, '#818cf8');
+worldLabel("Wi-Fi", 4, 3.5, 0, 0.25, '#818cf8');
+worldLabel("HDMI", 10, 2.8, 0, 0.2, '#6ee7b7');
+
+// === ANIMATE ===
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  const t = Date.now() * 0.001;
+
+  wifiWaves.forEach((w, i) => {
+    w.material.opacity = 0.08 + 0.1 * Math.sin(t * 2 + i * 1.5);
+    const s = 1 + 0.04 * Math.sin(t * 1.5 + i);
+    w.scale.set(s, s, s);
+  });
+
+  screenMat.emissiveIntensity = 0.35 + 0.05 * Math.sin(t * 0.7);
+
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>

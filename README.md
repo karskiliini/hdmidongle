@@ -1,54 +1,62 @@
 # Wireless Display Dongle
 
-Raspberry Pi -pohjainen langaton näyttödongle joka tukee sekä AirPlaytä (1080p) että NDI:tä (4K) automaattisella priorisoinnilla.
+Raspberry Pi -pohjaisia langattomia näyttödongleja ja lähettimiä.
 
-## Toimintalogiikka
+## Rakenne
 
 ```
-         ┌───────────────────────────────────────────┐
-         ▼                                           │
-       IDLE                                          │
-     (etsi NDI:tä)                                   │
-         │                                           │
-    NDI löytyy? ──Kyllä──→ NDI 4K ──────katkeaa────→─┘
-         │                                           │
-        Ei                                           │
-         │                                           │
-    AirPlay kuuntelee ──NDI löytyy──→ NDI 4K         │
-         │                                           │
-    asiakas yhdistää                                  │
-         │                                           │
-    AirPlay aktiivinen ──────────katkeaa────────────→─┘
-    (ei etsi NDI:tä)
+hdmidongle/
+├── receiver/           ← Vastaanotin-dongle (Pi Zero 2W / Pi 4)
+├── c64-transmitter/    ← C64 langaton lähetin (Pico + Pi Zero)
+├── app/                ← Mac-konfigurointisovellus (SwiftUI)
+├── case/               ← 3D-kotelomallit (OpenSCAD)
+└── docs/               ← Dokumentaatio ja pitch
 ```
 
-- Idle: etsi NDI ensin (4K priorisoitu)
-- Ei NDI:tä → AirPlay kuuntelee, mutta etsii NDI:tä samalla
-- AirPlay-asiakas yhdistää → aktiivinen, ei enää etsi NDI:tä
-- Yhteys katkeaa → IDLE → etsi taas NDI ensin
+## Järjestelmä
 
-## Profiilit
+```
+C64 ──bus──→ Pico + Pi Zero ──Wi-Fi──┐
+MacBook ──AirPlay 1080p──Wi-Fi──┐    │
+Mac Mini ──NDI 4K──Wi-Fi──┐     ▼    ▼
+                           ▼    Pi Zero 2W ──HDMI──→ 1080p
+                          Pi 4 ──HDMI 0──→ 4K Display 1
+                               ──HDMI 1──→ 4K Display 2
+```
 
-| Alusta | AirPlay (1080p) | NDI (4K) | Hinta |
-|---|---|---|---|
-| **Pi Zero 2 W** | Kyllä | Ei (HW-rajoitus) | ~48 € |
-| **Pi 4** | Kyllä | Kyllä | ~84 € |
+Vastaanotin-dongle tukee kolmea protokollaa automaattisella priorisoinnilla:
+NDI (4K) > C64 raw UDP > AirPlay (1080p)
+
+## Komponentit
+
+| Moduuli | Alusta | Hinta |
+|---|---|---|
+| Vastaanotin Lite (1080p) | Pi Zero 2 W | [~48 €](BOM.md) |
+| Vastaanotin 4K Dual | Pi 4 | [~92 €](BOM.md) |
+| C64-lähetin | Pico + Pi Zero 2W | [~35 €](c64-transmitter/BOM.md) |
 
 ## Asennus
 
-### Dongle (yksi skripti, tunnistaa alustan)
+### Vastaanotin-dongle
 
 ```bash
-chmod +x setup/install.sh
-sudo ./setup/install.sh "Olohuone"
+cd receiver
+chmod +x install.sh
+sudo ./install.sh "Olohuone"
 sudo reboot
 ```
+
+### Konfigurointi (3 tapaa)
+
+1. **HDMI** — ohjeet näytöllä kun dongle on alustamaton
+2. **Puhelin** — yhdistä Dongle-XXXX Wi-Fi → selain → konfiguroi
+3. **Mac USB** — DongleConfig-appi aukeaa automaattisesti
 
 ### Mac Mini (4K NDI -lähde)
 
 ```bash
 brew install --cask ndi-tools
-# Käynnistä NDI Screen Capture → valitse näyttö → 4K
+# NDI Screen Capture → valitse näyttö → 4K
 ```
 
 ### MacBook (1080p AirPlay)
@@ -57,17 +65,6 @@ brew install --cask ndi-tools
 Ohjauskeskus → Näytön peilaus → "Olohuone"
 ```
 
-## Käyttö
-
-1. Kytke dongle näytön HDMI-porttiin
-2. Kytke USB-virta monitorin USB-porttiin
-3. Odota ~30s käynnistystä
-4. Dongle toimii automaattisesti:
-   - NDI-lähde verkossa → 4K-vastaanotto
-   - Ei NDI:tä → AirPlay kuuntelee
-
-DVI-käyttö: passiivinen HDMI→DVI-adapteri donglen ja näytön väliin.
-
 ## Laitteisto
 
-Katso [BOM.md](BOM.md) — komponenttilista ja hinnat.
+Katso [BOM.md](BOM.md) — kokonaiskomponenttilista ja hinnat.
