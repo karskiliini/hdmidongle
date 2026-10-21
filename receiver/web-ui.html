@@ -114,7 +114,7 @@ function renderUI(data) {
       <h2>Tila</h2>
       <div class="info-row">
         <span class="label">Wi-Fi</span>
-        <span><span class="dot ${s.wifi_connected?'green':'red'}"></span>${s.wifi_connected ? (s.wifi_ssid||'Yhdistetty') : 'Ei yhteytta'}</span>
+        <span><span class="dot ${s.wifi_connected?'green':'red'}"></span>${s.wifi_connected ? esc(s.wifi_ssid||'Yhdistetty') : 'Ei yhteytta'}</span>
       </div>
       <div class="info-row">
         <span class="label">Palvelu</span>
@@ -147,12 +147,15 @@ async function scanWifi(currentSSID) {
       list.innerHTML = '<div style="padding:10px;color:#6b7280">Ei verkkoja</div>';
       return;
     }
-    list.innerHTML = data.networks.map(n => `
-      <div class="wifi-item" onclick="selectWifi('${esc(n.ssid)}', this)">
+    list.innerHTML = data.networks.map((n, index) => `
+      <div class="wifi-item" data-network-index="${index}">
         <span class="name">${n.ssid === currentSSID ? '<b>'+esc(n.ssid)+'</b>' : esc(n.ssid)}</span>
         <span class="signal">${n.signal}% ${n.security ? '&#x1f512;' : ''}</span>
       </div>
     `).join('');
+    list.querySelectorAll('[data-network-index]').forEach(el => {
+      el.addEventListener('click', () => selectWifi(data.networks[Number(el.dataset.networkIndex)].ssid, el));
+    });
   } catch(e) {
     document.getElementById('wifi-list').innerHTML = '<div style="padding:10px;color:#6b7280">Skannaus epaonnistui</div>';
   }

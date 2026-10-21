@@ -60,6 +60,7 @@ struct ConfigView: View {
     @State private var saving = false
     @State private var statusMessage = ""
     @State private var showPassword = false
+    @State private var adminToken = ""
 
     let modes = ["auto", "airplay", "ndi", "retro"]
     let resolutions = ["auto", "1080p", "720p"]
@@ -90,6 +91,14 @@ struct ConfigView: View {
             .background(.bar)
 
             Divider()
+
+            HStack {
+                SecureField("Ylläpitotoken", text: $adminToken)
+                Button("Kirjaudu") {
+                    DongleAPI.shared.adminToken = adminToken
+                    Task { await loadStatus() }
+                }
+            }.padding()
 
             if loading {
                 Spacer()

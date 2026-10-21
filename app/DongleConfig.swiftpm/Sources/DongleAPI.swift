@@ -4,6 +4,7 @@ import Foundation
 class DongleAPI {
     static let shared = DongleAPI()
     private let baseURL = "http://10.42.0.1:8080/api"
+    var adminToken = "" // In memory only; never store the operator credential in logs/defaults.
 
     struct DongleStatus: Codable {
         let config: DongleConfig
@@ -91,11 +92,15 @@ class DongleAPI {
         var request = URLRequest(url: URL(string: baseURL + path)!)
         request.httpMethod = method
         request.timeoutInterval = 10
+        request.setValue("Bearer \(adminToken)", forHTTPHeaderField: "Authorization")
         if let body = body {
             request.httpBody = body
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         }
-        let (data, _) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
+            throw URLError(.userAuthenticationRequired)
+        }
         return data
     }
 }
