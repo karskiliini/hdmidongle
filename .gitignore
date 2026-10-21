@@ -2,3 +2,9 @@
 *.stl
 *.3mf
 *.gcode
+
+__pycache__/
+
+*.py[cod]
+
+.pytest_cache/

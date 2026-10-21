@@ -139,6 +139,21 @@ sudo reboot
 
 ### Konfigurointi (3 tapaa)
 
+Konfigurointipalvelu vaatii nyt ylläpitotokenin myös USB/AP/LAN-yhteydessä.
+Asennus luo satunnaisen tokenin rootin luettavaan tiedostoon
+`/etc/dongle/security.env`; palvelu lukee sen `DONGLE_ADMIN_TOKEN`-muuttujana.
+Selain kysyy käyttäjää `admin` ja salasanaksi tokenia, Mac-appissa token annetaan
+Ylläpitotoken-kenttään. Tokenia tai Wi-Fi-salasanaa ei palauteta status-API:ssa.
+
+Oletuskuuntelu on turvallisesti `127.0.0.1`. USB/AP/LAN-käyttöön ota kuuntelu
+erikseen käyttöön systemd override -asetuksella
+`Environment=DONGLE_BIND_HOST=0.0.0.0` ja käynnistä config-palvelu uudelleen.
+Etäyhteydelle käytä TLS-välitystä tai SSH-tunnelia; HTTP Basic ei salaa tokenia
+verkossa. Säilytä välityksessä Host-otsake ja selaimen Origin.
+Tokenin voi vaihtaa muokkaamalla `security.env`-tiedostoa (oikeudet 600) ja
+käynnistämällä config-palvelun uudelleen. Vanha asennus tarvitsee tämän
+asetuksen ennen päivitystä, muuten web-pääsy sulkeutuu.
+
 1. **HDMI** — alustamaton dongle näyttää ohjeet ruudulla
 2. **Puhelin** — yhdistä `Dongle-XXXX` Wi-Fi (ei salasanaa) → selain → `http://192.168.4.1:8080`
 3. **Mac USB** — kytke dongle USB:llä → DongleConfig-appi aukeaa automaattisesti

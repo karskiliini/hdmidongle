@@ -105,10 +105,20 @@ systemctl enable usb-gadget.service
 # 5. Asenna config-palvelin
 echo "--- Asennetaan config-palvelin ---"
 apt install -y python3 python3-pip
-pip3 install flask 2>/dev/null || apt install -y python3-flask
+apt install -y python3-venv
+python3 -m venv /opt/dongle-config-venv
+/opt/dongle-config-venv/bin/pip install -r "$(dirname "$0")/requirements-web.txt"
 
 cp "$(dirname "$0")/config-server.py" /usr/local/bin/dongle-config-server.py
+cp "$(dirname "$0")/dongle_security.py" /usr/local/bin/dongle_security.py
 chmod +x /usr/local/bin/dongle-config-server.py
+
+# Unique local credential; never put it in the unit, Git, or public status API.
+install -d -m 700 /etc/dongle
+if [ ! -f /etc/dongle/security.env ]; then
+    (umask 077; python3 -c 'import secrets; print("DONGLE_ADMIN_TOKEN=" + secrets.token_urlsafe(32))' > /etc/dongle/security.env)
+fi
+chmod 600 /etc/dongle/security.env
 
 # Systemd-palvelu config-palvelimelle
 cat > /etc/systemd/system/dongle-config.service << 'EOF'
@@ -119,10 +129,11 @@ Wants=usb-gadget.service
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/python3 /usr/local/bin/dongle-config-server.py
+ExecStart=/opt/dongle-config-venv/bin/python /usr/local/bin/dongle-config-server.py
 Restart=on-failure
 RestartSec=3
 Environment=FLASK_ENV=production
+EnvironmentFile=/etc/dongle/security.env
 
 [Install]
 WantedBy=multi-user.target
@@ -134,4 +145,5 @@ systemctl enable dongle-config.service
 echo ""
 echo "=== USB Gadget -tila asennettu ==="
 echo "Pi näkyy verkkoadapterina (10.42.0.1) kun kytketään Maciin USB:llä"
-echo "Config-palvelin: http://10.42.0.1:8080"
+echo "Config-palvelin: oletuksena localhost; etäkäyttö SSH/TLS-välityksellä (ks. README)."
+echo "Ylläpitotoken: /etc/dongle/security.env (vain root)"

@@ -12,10 +12,43 @@ Käyttötavat:
 import json
 import subprocess
 import os
+import re
 from pathlib import Path
 from flask import Flask, request, jsonify, send_file
+from dongle_security import valid_token, same_origin
 
 app = Flask(__name__)
+app.config["MAX_CONTENT_LENGTH"] = 16384
+
+
+@app.before_request
+def authenticate():
+    token = os.environ.get("DONGLE_ADMIN_TOKEN")
+    if not token or len(token) < 32:
+        return jsonify({"error": "DONGLE_ADMIN_TOKEN must be configured (32+ characters)"}), 503
+    if not valid_token(request.headers, token):
+        return jsonify({"error": "Authentication required"}), 401, {"WWW-Authenticate": 'Basic realm="Dongle", charset="UTF-8"'}
+    if not same_origin(request.headers, request.scheme):
+        return jsonify({"error": "Origin rejected"}), 403
+
+
+def public_config(config):
+    # The client may replace a Wi-Fi password, but must never read it back.
+    return {**config, "wifi_password": ""}
+
+
+def valid_config_input(data):
+    if not isinstance(data, dict) or not data:
+        return False
+    for key, allowed in {"mode": {"auto", "airplay", "ndi", "retro"}, "resolution": {"auto", "1080p", "720p"}}.items():
+        if key in data and (not isinstance(data[key], str) or data[key] not in allowed):
+            return False
+    for key, limit in [("dongle_name", 64), ("wifi_ssid", 32), ("wifi_password", 64)]:
+        if key in data and (not isinstance(data[key], str) or len(data[key].encode("utf-8")) > limit or any(ord(c) < 32 for c in data[key])):
+            return False
+    if "wifi_country" in data and (not isinstance(data["wifi_country"], str) or not re.fullmatch("[A-Z]{2}", data["wifi_country"])):
+        return False
+    return True
 
 WEB_UI_PATH = "/usr/local/share/dongle/web-ui.html"
 
@@ -47,7 +80,9 @@ def load_config():
 def save_config(config):
     """Tallenna konfiguraatio."""
     os.makedirs(os.path.dirname(CONFIG_FILE), exist_ok=True)
-    with open(CONFIG_FILE, "w") as f:
+    fd = os.open(CONFIG_FILE, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    os.fchmod(fd, 0o600)
+    with os.fdopen(fd, "w") as f:
         json.dump(config, f, indent=2)
 
 
@@ -172,7 +207,7 @@ def web_ui():
 def status():
     """Palauttaa donglen tilan ja konfiguraation."""
     return jsonify({
-        "config": load_config(),
+        "config": public_config(load_config()),
         "system": get_system_info(),
     })
 
@@ -181,8 +216,8 @@ def status():
 def update_config():
     """Päivitä konfiguraatio."""
     data = request.get_json()
-    if not data:
-        return jsonify({"error": "Ei dataa"}), 400
+    if not valid_config_input(data):
+        return jsonify({"error": "Virheelliset asetukset"}), 400
 
     config = load_config()
     errors = []
@@ -195,7 +230,9 @@ def update_config():
     # Päivitä Wi-Fi
     if "wifi_ssid" in data:
         config["wifi_ssid"] = data["wifi_ssid"]
-        config["wifi_password"] = data.get("wifi_password", "")
+        # An empty password field retains the stored secret for the same SSID.
+        old = load_config()
+        config["wifi_password"] = data.get("wifi_password") or (old["wifi_password"] if old["wifi_ssid"] == data["wifi_ssid"] else "")
         config["wifi_country"] = data.get("wifi_country", "FI")
         ok, msg = apply_wifi(
             config["wifi_ssid"],
@@ -217,7 +254,7 @@ def update_config():
     return jsonify({
         "success": len(errors) == 0,
         "errors": errors,
-        "config": config,
+        "config": public_config(config),
     })
 
 
@@ -262,4 +299,4 @@ def reboot():
 
 if __name__ == "__main__":
     # Kuuntele kaikissa osoitteissa (USB, AP, sisäverkko)
-    app.run(host="0.0.0.0", port=8080, debug=False)
+    app.run(host=os.environ.get("DONGLE_BIND_HOST", "127.0.0.1"), port=8080, debug=False)
